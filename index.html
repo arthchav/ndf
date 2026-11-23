@@ -53,12 +53,10 @@ input:focus,textarea:focus{outline:2px solid var(--pri);border-color:transparent
 .chip.me{background:var(--acc);color:#2a1700;border-color:transparent}
 .chip.me b{color:#2a1700}
 .chip i{position:absolute;top:-7px;right:-6px;background:var(--acc);color:#2a1700;font-style:normal;font-size:11px;font-weight:800;border-radius:50%;width:19px;height:19px;display:grid;place-items:center}
-.whoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.whoGrid .chip{padding:16px 10px;font-size:17px;border-radius:14px;text-align:center}
 .preview{background:#fff;border-radius:var(--r);overflow:hidden;display:flex;justify-content:center;position:relative}
 .preview img{max-width:100%;max-height:36vh;object-fit:contain;display:block}
 .preview.strip img{max-height:none;width:100%}
-.preview .lbl{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;padding:3px 8px;border-radius:8px}
+.preview .lbl{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;padding:3px 8px;border-radius:8px}
 .tools{display:flex;gap:8px;align-items:center}.tools .btn{flex:1;font-size:14px;padding:10px 6px}
 .namebox{background:#0a1016;border:1px dashed var(--line);border-radius:12px;padding:10px 12px}
 .namebox code{display:block;word-break:break-all;font-size:14px;color:var(--acc);margin-top:3px}
@@ -151,16 +149,6 @@ p.center{margin:-6px 0 0}
   </footer>
 </section>
 
-<!-- ===================== QUI ES-TU ===================== -->
-<section id="who" class="screen">
-  <header class="top slim"><button class="icon" id="whoBack" aria-label="Retour">‹</button><h1>Qui es-tu ?</h1><span></span></header>
-  <main class="content">
-    <p class="muted">Tes initiales seront toujours placées <b>en premier</b> dans le nom de chaque fichier.</p>
-    <div class="whoGrid" id="whoGrid"></div>
-  </main>
-  <footer class="bottom"><button class="big primary" id="whoOk">Continuer →</button></footer>
-</section>
-
 <!-- ===================== REVUE D'UN TICKET ===================== -->
 <section id="review" class="screen">
   <header class="top slim">
@@ -189,7 +177,7 @@ p.center{margin:-6px 0 0}
       <div class="chips" id="typeChips"></div>
       <input id="fType" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="ex : 2_nuits_logement">
     </div>
-    <div class="field"><span>Personnes <small>(toi en premier, puis dans l'ordre choisi)</small></span>
+    <div class="field"><span>Personnes <small>(dans l'ordre choisi)</small></span>
       <div class="chips" id="peopleChips"></div>
       <small class="src" id="srcPeople"></small>
       <input id="fExtra" autocomplete="off" autocapitalize="characters" autocorrect="off" placeholder="Autres initiales (ex : CJ)">
@@ -237,6 +225,10 @@ p.center{margin:-6px 0 0}
     <label class="field"><span>Collègues — une ligne par personne : Prénom = INITIALES</span>
       <textarea id="sColl" rows="9" autocapitalize="off" autocorrect="off"></textarea>
     </label>
+    <label class="field"><span>Projets en cours — aide la lecture du n° manuscrit</span>
+      <textarea id="sProj" rows="3" autocapitalize="off" autocorrect="off" inputmode="numeric" placeholder="40039, 40040…"></textarea>
+      <small class="muted">Séparés par des virgules ou des retours à la ligne. Les projets validés sont ajoutés automatiquement.</small>
+    </label>
     <label class="check"><input type="checkbox" id="sGray"> <span>PDF légers en niveaux de gris (recommandé)</span></label>
     <label class="check"><input type="checkbox" id="sBanner"> <span>Ajouter un bandeau en haut de chaque PDF (projet, date, type, personnes)</span></label>
     <details class="card">
@@ -256,7 +248,7 @@ p.center{margin:-6px 0 0}
       <p>Dans Safari : Partager → « Sur l'écran d'accueil ». Envoie tes tickets régulièrement : iOS peut effacer les données d'un site non utilisé pendant plusieurs semaines.</p>
     </details>
     <button class="big danger" id="sClear">Supprimer tous les tickets</button>
-    <p class="muted small center">ConfigMaker · Notes de frais v2.0<br>Tout est traité sur le téléphone.<br>Open source : PDF.js · Tesseract.js · OpenCV.js</p>
+    <p class="muted small center">ConfigMaker · Notes de frais v3.0<br>Tout est traité sur le téléphone.<br>Open source : PDF.js · Tesseract.js · OpenCV.js</p>
   </main>
   <footer class="bottom"><button class="big primary" id="setSave">Enregistrer les réglages</button></footer>
 </section>
@@ -291,75 +283,181 @@ function sanitize(s){
   return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
     .replace(/[^A-Za-z0-9\-]+/g,'_').replace(/_+/g,'_').replace(/^_+|_+$/g,'');
 }
-function peopleList(d){ const o=(d.people||[]).filter(p=>p&&p!==d.me); return d.me?[d.me,...o]:o; }
+function peopleList(d){ return (d.people||[]).filter(Boolean); }
 function buildName(d){
   return [(d.date||'').replace(/-/g,'')||'AAAAMMJJ', d.projet||'PROJET', d.type||'TYPE', ...peopleList(d)].join('_');
 }
 function frDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
 
-/* ---- Texte d'une page PDF : lignes + zone haute ---- */
+const deacc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'');
+
+/* Ligne manuscrite = 1re rangée de texte en haut de la page */
+function handRow(items,pageH){
+  let it=items.filter(i=>i.str&&i.str.trim()&&i.y<pageH*0.3).sort((a,b)=>a.y-b.y);
+  while(it.length){
+    const y0=it[0].y, hh=Math.max(it[0].h||20,12);
+    const row=it.filter(i=>i.y<=y0+hh*0.6), s=row.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
+    if((s.match(/[A-Za-z0-9]/g)||[]).length>=3) return s;
+    it=it.filter(i=>!row.includes(i));
+  }
+  return '';
+}
 function itemsToText(items,pageH){
   const it=items.filter(i=>i.str&&i.str.trim()).sort((a,b)=>(a.y-b.y)||(a.x-b.x));
   const lines=[]; let cur=null;
-  for(const i of it){
-    if(!cur||Math.abs(i.y-cur.y)>4){ cur={y:i.y,parts:[]}; lines.push(cur); }
-    cur.parts.push(i);
-  }
+  for(const i of it){ if(!cur||Math.abs(i.y-cur.y)>4){ cur={y:i.y,parts:[]}; lines.push(cur); } cur.parts.push(i); }
   const txt=l=>l.parts.sort((a,b)=>a.x-b.x).map(p=>p.str).join(' ').replace(/\s+/g,' ').trim();
-  return { full:lines.map(txt).join('\n'), top:lines.filter(l=>l.y<pageH*0.3).map(txt).join('\n') };
+  return { full:lines.map(txt).join('\n'), top:lines.filter(l=>l.y<pageH*0.3).map(txt).join('\n'), hand:handRow(items,pageH) };
 }
 
-/* ---- Date imprimée ---- */
-const MONTHS={janv:1,jan:1,janvier:1,fevr:2,fev:2,fevrier:2,feb:2,mars:3,mar:3,avr:4,avril:4,apr:4,mai:5,may:5,juin:6,jun:6,juil:7,juillet:7,jul:7,aout:8,aug:8,sept:9,sep:9,septembre:9,oct:10,octobre:10,nov:11,novembre:11,dec:12,decembre:12};
-function findDate(text, now){
-  now=now||new Date();
-  let t=String(text||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
-  for(let k=0;k<2;k++) t=t.replace(/([\d\/\.\-])o(?=\d)/g,(m,a)=>a+'0').replace(/(\d)o(?=[\d\/\.\-])/g,(m,a)=>a+'0')
-    .replace(/([\d\/\.\-])[il|](?=\d)/g,(m,a)=>a+'1').replace(/(\d)[il|](?=[\d\/\.\-])/g,(m,a)=>a+'1');
-  const min=new Date(now); min.setDate(min.getDate()-400);
-  const max=new Date(now); max.setDate(max.getDate()+2);
+/* Coupe la ligne manuscrite "PROJET - INI / INI" */
+function splitHand(row,known){
+  const r=String(row||''), cuts=[];
+  for(let i=1;i<r.length-1;i++) if(('-—–'.includes(r[i])||(r[i]==='~'&&r[i-1]===' '&&r[i+1]===' '))&&r.slice(0,i).replace(/[^A-Za-z0-9]/g,'').length>=2) cuts.push(i);
+  const ks=known||[];
+  if(cuts.length){
+    let best=null;
+    for(const i of cuts){ const left=r.slice(0,i).replace(/[-\s]+$/,''), right=r.slice(i+1).replace(/^[-~\s]+/,'');
+      const c=Math.min(...projectCands(ks).map(({p,bonus})=>projectCost(left,p)-bonus));
+      if(!best||c<best.c-1e-9) best={c,left,right}; }
+    return {left:best.left,right:best.right};
+  }
+  const m=r.match(/^(\S+)\s+(.+)$/); return m?{left:m[1],right:m[2]}:{left:r,right:''};
+}
+
+/* Distance d'édition pondérée par les confusions d'OCR manuscrit */
+function wlev(a,b,sub,indel){
+  const n=a.length,m=b.length,d=[];
+  for(let i=0;i<=n;i++){ d[i]=[i===0?0:d[i-1][0]+indel(a[i-1])]; }
+  for(let j=1;j<=m;j++) d[0][j]=d[0][j-1]+1;
+  for(let i=1;i<=n;i++) for(let j=1;j<=m;j++)
+    d[i][j]=Math.min(d[i-1][j]+indel(a[i-1]), d[i][j-1]+1, d[i-1][j-1]+sub(a[i-1],b[j-1]));
+  return d[n][m];
+}
+/* Chiffres manuscrits : formes souvent confondues par l'OCR */
+const DIGIT_LOOK={'0':'OoDQCcU()J°ôòöøÖ@','1':'lIi|!/\\','2':'Zz','3':'','4':'LltY¼½yhAq&~U','5':'Ss$~','6':'bG','7':'T','8':'B&','9':'qg°'};
+const PUNCT='.,;:\'"`()[]{}\\/~-_ °·•*';
+const FOUR_SEQ=/lJ|lt|L\\|i\.?\s?t/g; // "4" manuscrit lu en 2 caractères
+function projectCost(raw,p){
+  const a=[...String(raw).replace(FOUR_SEQ,'4').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'')];
+  const sub=(c,d)=> c===d?0 : (DIGIT_LOOK[d]&&DIGIT_LOOK[d].includes(c))?0.3 : /\d/.test(c)?1.2 : 0.9;
+  const indel=c=>PUNCT.includes(c)?0.25:(/[a-z]/i.test(c)?0.5:0.9);
+  return wlev(a,[...p],sub,indel);
+}
+/* décodage libre (sans liste) : chaque caractère -> chiffre le plus probable */
+function decodeDigits(raw){
+  let s='';
+  for(const c of deacc(raw)){ if(/\d/.test(c)){s+=c;continue;} for(const d in DIGIT_LOOK) if(DIGIT_LOOK[d].includes(c)&&!'()J~&/\\'.includes(c)){ s+=d; break; } }
+  return s;
+}
+function projectPrefix(known){ const c={}; (known||[]).forEach(p=>{ if(/^\d{5}$/.test(p)) c[p.slice(0,3)]=(c[p.slice(0,3)]||0)+1; });
+  return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]||'400'; }
+function projectCands(known){
+  const ks=[...new Set((known||[]).map(sanitize).filter(Boolean))], pre=projectPrefix(ks);
+  const gen=[...Array(100).keys()].map(i=>pre+pad(i)).filter(p=>!ks.includes(p));
+  return ks.map(p=>({p,bonus:0.4})).concat(gen.map(p=>({p,bonus:0})));
+}
+function findProjectHand(left,known,prevProj){
+  const L=String(left||'').trim(); if(L.replace(/[^A-Za-z0-9]/g,'').length<2) return null;
+  const sc=projectCands(known).map(({p,bonus})=>({p,c:projectCost(L,p)-bonus-(p===prevProj?0.5:0)})).sort((a,b)=>a.c-b.c);
+  const best=sc[0], second=sc[1];
+  if(best.c>2.4) return null;
+  return {projet:best.p,conf:(best.c<1.5&&(!second||second.c-best.c>=0.3))?'ok':'guess'};
+}
+/* Initiales : une "case" par séparateur, comparée aux initiales connues */
+const LETTER_LOOK={C:'L(E<GcÇ€',L:'C1I|',D:')0OB',B:'08&6',A:'4/\\F',V:'UY',X:'K',S:'5$',F:'EP',M:'N',P:'F'};
+function iniCost(chunk,ini){
+  const a=[...deacc(chunk).toUpperCase().replace(/></g,'X').replace(/[\s.,'`]/g,'')];
+  const sub=(c,d)=> c===d?0 : (LETTER_LOOK[d]&&LETTER_LOOK[d].includes(c))?0.35 : 1;
+  const indel=c=>PUNCT.includes(c)||/\d/.test(c)?0.35:0.8;
+  return wlev(a,[...ini],sub,indel);
+}
+function findInitialsHand(right,colleagues){
+  const inis=(colleagues||[]).map(c=>c[1]); const out=[];
+  const chunks=String(right||'').split(/\s*[\/|!]\s*|\s+[Il1]\s+|\s*-\s*|\s+~\s+/).map(s=>s.trim()).filter(Boolean);
+  const best=ch=>{ const sc=inis.map(i=>({i,c:iniCost(ch,i)})).sort((a,b)=>a.c-b.c);
+    return (sc.length&&sc[0].c<=Math.max(0.75,sc[0].i.length*0.45)&&(!sc[1]||sc[1].c-sc[0].c>=0.15))?sc[0].i:null; };
+  for(const ch of chunks){
+    if(ch.replace(/[^A-Za-z]/g,'').length<1) continue;
+    let found=[best(ch)];
+    if(!found[0]&&/\s/.test(ch)) found=ch.split(/\s+/).map(best); // "AC JM" sans séparateur
+    for(const f of found) if(f&&!out.includes(f)) out.push(f);
+  }
+  return out;
+}
+
+/* ====== Dates ====== */
+const MONTHS=[['janvier',1],['fevrier',2],['mars',3],['avril',4],['mai',5],['juin',6],['juillet',7],['aout',8],['septembre',9],['octobre',10],['novembre',11],['decembre',12],
+  ['janv',1],['fevr',2],['fev',2],['avr',4],['juil',7],['sept',9],['oct',10],['nov',11],['dec',12],['jan',1],['feb',2],['apr',4],['may',5],['jun',6],['jul',7],['aug',8],['sep',9]];
+function lev(a,b){ return wlev([...a],[...b],(x,y)=>x===y?0:1,()=>1); }
+function monthOf(w){
+  w=w.replace(/[^a-z]/g,''); if(w.length<3) return 0;
+  let best=0,bc=9;
+  for(const [n,m] of MONTHS){ const c=lev(w,n)/Math.max(n.length,3); if(c<bc){bc=c;best=m;} }
+  return bc<=0.34?best:0;
+}
+function findDate(text,ref){
+  ref=ref||new Date();
+  let t=deacc(text).toLowerCase().replace(/œ/g,'oe').replace(/['’`]/g,' ').replace(/(\d\s?)s(?=\s?[\/\.])/g,'$15');
+  // confusions dans les nombres
+  for(let k=0;k<2;k++) t=t.replace(/([\d\/\.\-])[o](?=\d)/g,'$10').replace(/(\d)o(?=[\d\/\.\-])/g,'$10').replace(/([\d\/\.\-])[il|](?=\d)/g,'$11').replace(/(\d)[il|](?=[\d\/\.\-])/g,'$11');
+  const refY=ref.getFullYear(), near=new Date(ref); near.setDate(near.getDate()-120);
+  const far=new Date(ref); far.setDate(far.getDate()-400); const max=new Date(ref); max.setDate(max.getDate()+2);
   const cands=[];
-  const add=(d,m,y,score,pos)=>{
-    y=+y; d=+d; m=+m; if(y<100) y+=2000;
-    if(!(m>=1&&m<=12&&d>=1&&d<=31)) return;
-    const dt=new Date(y,m-1,d);
-    if(dt.getMonth()!==m-1||dt<min||dt>max) return;
+  const yearOf=(y,d,m)=>{ y=String(y).replace(/\s/g,'');
+    if(/^20\d\d$/.test(y)) return +y; if(/^\d\d$/.test(y)) return 2000+(+y);
+    if(/^2.2.$/.test(y)||/^20..$/.test(y)||(/^\d{4}$/.test(y)&&y.slice(2)===String(refY).slice(2))){ let Y=refY; if(new Date(Y,m-1,d)>max) Y--; return Y; } return 0; };
+  const add=(d,m,y,score,pos,ctxt)=>{
+    d=+d; m=+m; if(!(m>=1&&m<=12&&d>=1&&d<=31&&y)) return;
+    const dt=new Date(y,m-1,d); if(dt.getMonth()!==m-1||dt<far||dt>max) return;
+    if(dt>=near) score+=2;
+    if(/(date|le|du)\W{0,4}$/.test(ctxt)) score+=1.5;
     cands.push({iso:`${y}-${pad(m)}-${pad(d)}`,score,pos});
   };
+  const D='(\\d\\s?\\d|\\d)', S='\\s*[\\/\\.\\-]+\\s*', Y='(2\\s?0\\s?\\d\\s?\\d|\\d{4}|\\d\\d(?!\\s?\\d)|2[\\w)]\\s?2\\s?[\\w)]{1,2}|20[a-z)]{2})';
   let r;
-  const re1=/(?:^|[^\d])(\d{1,2})\s?[\/\.\-]\s?(\d{1,2})\s?[\/\.\-]\s?(\d{4}|\d{2})(?!\d)/g;
-  while((r=re1.exec(t))) add(r[1],r[2],r[3],r[3].length===4?3:2,r.index);
+  const re1=new RegExp('(?:^|[^\\d])'+D+S+D+S+Y,'g');
+  while((r=re1.exec(t))){ const d=r[1].replace(/\s/g,''), m=r[2].replace(/\s/g,''); add(d,m,yearOf(r[3],d,m),r[3].replace(/\s/g,'').length===4?3:2,r.index,t.slice(Math.max(0,r.index-12),r.index+1)); re1.lastIndex=r.index+1; }
   const re2=/(?:^|[^\d])(20\d{2})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})(?!\d)/g;
-  while((r=re2.exec(t))) add(r[3],r[2],r[1],3,r.index);
-  const re3=/(?:^|[^\d])(\d{1,2})(?:er)?\s*(janvier|janv|jan|fevrier|fevr|fev|feb|mars|mar|avril|avr|apr|mai|may|juin|jun|juillet|juil|jul|aout|aug|septembre|sept|sep|octobre|oct|novembre|nov|decembre|dec)[a-z\.]*\s*(\d{4}|\d{2})(?!\d)/g;
-  while((r=re3.exec(t))) add(r[1],MONTHS[r[2]],r[3],3,r.index);
+  while((r=re2.exec(t))) add(r[3],r[2],+r[1],3,r.index,'');
+  const re3=/(?:^|[^\d])(\d{1,2})(?:er)?\s*([a-z][a-z0-9 \.]{2,13}?)\s*[\.,]?\s*(20\d\d|2[\w)]2[\w)]{1,2}|20[a-z)]{2}|\d\d)(?![\d])/g;
+  while((r=re3.exec(t))){ const m=monthOf(r[2].replace(/1/g,'l')); if(m) add(r[1],m,yearOf(r[3],r[1],m),3,r.index,t.slice(Math.max(0,r.index-12),r.index+1)); re3.lastIndex=r.index+1; }
+  const re4=/(?:^|[^\d])(\d{1,2}) (\d{1,2}) (20\d\d)(?!\d)/g;
+  while((r=re4.exec(t))) add(r[1],r[2],+r[3],2,r.index,'');
+  const t2=t.replace(/(\d)\s(?=\d)/g,'$1'); // n° de transaction péage (aaaammjj…)
+  const re5=/(20\d\d)(\d\d)(\d\d)\d{6,}/g;
+  while((r=re5.exec(t2))){ let y=+r[1]; if(Math.abs(y-refY)>1) y=refY; add(r[3],r[2],y,1.5,9999,''); }
+  const re6=/(?:^|[^\d])(\d{1,2})\s?[\/\.]\s?(\d{1,2})(?=\d{3}|[^\d\/\.])/g; // jj/mm, année illisible
+  while((r=re6.exec(t))){ if(/(date|le)\W{0,4}$/.test(t.slice(Math.max(0,r.index-12),r.index+1))) add(r[1],r[2],yearOf('2?2?',+r[1],+r[2]),0.5,r.index+5000,t.slice(Math.max(0,r.index-12),r.index+1)); re6.lastIndex=r.index+1; }
   if(!cands.length) return null;
-  const count={}; cands.forEach(c=>count[c.iso]=(count[c.iso]||0)+1);
-  cands.sort((a,b)=>(count[b.iso]-count[a.iso])||(b.score-a.score)||(a.pos-b.pos));
+  const tot={}; cands.forEach(c=>tot[c.iso]=(tot[c.iso]||0)+c.score);
+  cands.sort((a,b)=>(tot[b.iso]-tot[a.iso])||(a.pos-b.pos));
   return cands[0].iso;
 }
 
-/* ---- N° de projet (manuscrit en haut) ---- */
-function findProject(top,full,recent){
-  const F=String(full||''), T=String(top||'').replace(/(\d)\s(?=\d)/g,'$1'); // "400 45" -> "40045"
-  for(const p of (recent||[])){ const q=sanitize(p); if(q && new RegExp('(?:^|\\D)'+q+'(?!\\d)').test(F+'\n'+T)) return q; }
-  const re=/(?:^|[^\d])(\d{5})(?!\d)(?!\s*[A-Za-zÀ-ÿ]{3})/g; // 5 chiffres, mais pas "69003 LYON"
-  const r=re.exec(T); return r?r[1]:'';
+/* Lot : une date isolée dont le mois détonne entre deux voisins cohérents est corrigée (OCR 07 -> 01…) */
+function fixDatesBatch(list){
+  const P=s=>s?new Date(s+'T12:00:00'):null;
+  const near=(j,s)=>{ for(let k=j+s;k>=0&&k<list.length;k+=s) if(list[k].date) return P(list[k].date); return null; };
+  for(let j=1;j<list.length-1;j++){
+    const a=near(j,-1), c=near(j,1), t=list[j]; if(!a||!c||!t.date||a>c) continue;
+    const b=P(t.date); if(b>=a&&b<=c) continue;
+    const d=+t.date.slice(8,10);
+    for(const ref of [a,c]){ const cand=new Date(ref.getFullYear(),ref.getMonth(),d,12);
+      if(cand.getDate()===d&&cand>=a&&cand<=c){ t.date=`${cand.getFullYear()}-${pad(cand.getMonth()+1)}-${pad(d)}`; t.src=Object.assign({},t.src,{date:'guess'}); break; } }
+  }
+  return list;
 }
-/* ---- Initiales (manuscrites en haut) : uniquement celles des collègues connus ---- */
-function findInitials(top,colleagues){
-  const toks=String(top||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().split(/[^A-Z]+/).filter(Boolean);
-  const inis=(colleagues||[]).map(c=>c[1]), out=[];
-  for(const tk of toks) if(inis.includes(tk)&&!out.includes(tk)) out.push(tk);
-  return out;
-}
-/* Analyse complète d'un ticket ; prev = ticket précédent du même lot */
 function analyzeTicket(text,prev,ctx){
-  text=text||{full:'',top:''};
-  const src={}, date=findDate(text.full,ctx.now); src.date=date?'ocr':'none';
-  let projet=findProject(text.top,text.full,ctx.recentProjects); src.projet=projet?'ocr':'none';
+  text=text||{full:'',top:'',hand:''};
+  const src={}, date=findDate(text.full,ctx.ref||ctx.now); src.date=date?'ocr':'none';
+  const known=[...(ctx.projects||[]),...(ctx.recentProjects||[])];
+  const hs=splitHand(text.hand||String(text.top||'').split('\n')[0],known);
+  const pr=findProjectHand(hs.left,known,prev&&prev.projet);
+  let projet=pr?pr.projet:''; src.projet=pr?(pr.conf==='ok'?'ocr':'guess'):'none';
   if(!projet&&prev&&prev.projet){ projet=prev.projet; src.projet='prev'; }
-  let people=findInitials(text.top,ctx.colleagues); src.people=people.length?'ocr':'none';
+  let people=findInitialsHand(hs.right,ctx.colleagues);
+  src.people=people.length?'ocr':'none';
   if(!people.length&&prev&&prev.people&&prev.people.length){ people=[...prev.people]; src.people='prev'; }
   return {date:date||'',projet,people,src};
 }
@@ -522,7 +620,7 @@ function makeZip(files,date){
   end.setUint32(12,cd.length,true); end.setUint32(16,off,true);
   return concatBytes([...parts,cd,new Uint8Array(end.buffer)]);
 }
-if(typeof module!=='undefined') module.exports={sanitize,buildName,peopleList,itemsToText,findDate,findProject,findInitials,analyzeTicket,orderCorners,homography,warpData,scanFilterData,jpegInfo,makePdf,makeZip,crc32};
+if(typeof module!=='undefined') module.exports={fixDatesBatch,sanitize,buildName,peopleList,itemsToText,handRow,splitHand,projectCost,findProjectHand,findInitialsHand,findDate,analyzeTicket,orderCorners,homography,warpData,scanFilterData,jpegInfo,makePdf,makeZip,crc32};
 </script>
 
 <!-- ===================== Application ===================== -->
@@ -533,6 +631,7 @@ const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.w
 const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const OPENCV_URLS=['https://docs.opencv.org/4.10.0/opencv.js','https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js'];
 const DEFAULT_COLLEAGUES=[['Arthur','AC'],['Julien','JM'],['Laurent','LD'],['Sacha','SC'],['Dorian','DLB'],['Simon','SLP'],['Xavier','XF'],['Clément','CV']];
+const DEFAULT_PROJECTS=['40039','40040','40044','40045','40054'];
 const TYPES=[['🍽 Restaurant','restaurant'],['🛏 Logement','logement'],['🚆 Transport','transport'],['✏️ Autre','']];
 const LIGHT={long:1700,short:1250,q:0.6};
 
@@ -546,17 +645,17 @@ const fmtSize=n=>n>1048576?(n/1048576).toFixed(1).replace('.',',')+' Mo':Math.ro
 
 /* ---------- Réglages ---------- */
 const settings=(()=>{
-  const def={v:2,email:'',colleagues:DEFAULT_COLLEAGUES,me:'AC',banner:true,gray:true,recentProjects:[],tipClosed:false};
+  const def={v:3,email:'',colleagues:DEFAULT_COLLEAGUES,projects:DEFAULT_PROJECTS,banner:true,gray:true,recentProjects:[],tipClosed:false};
   let s; try{ s=Object.assign(def,JSON.parse(localStorage.getItem('ndf_settings')||'{}')); }catch(e){ s=def; }
-  if(!(s.v>=2)){ // migration v1 -> v2
-    if(!s.colleagues.some(c=>c[1]==='AC')) s.colleagues=[['Arthur','AC'],...s.colleagues];
-    s.me=s.me||'AC'; s.gray=true; s.v=2;
+  if(!(s.v>=3)){ // migration -> v3 : Arthur en tête de liste, plus de « moi » imposé, liste de projets
+    s.colleagues=[['Arthur','AC'],...s.colleagues.filter(c=>c[1]!=='AC')];
+    if(!Array.isArray(s.projects)||!s.projects.length) s.projects=[...new Set([...DEFAULT_PROJECTS,...(s.recentProjects||[])])];
+    if(s.v===undefined) s.gray=true; delete s.me; s.v=3;
   }
   return s;
 })();
 function saveSettings(){ try{ localStorage.setItem('ndf_settings',JSON.stringify(settings)); }catch(e){} }
 saveSettings();
-const nameOf=ini=>{ const c=settings.colleagues.find(c=>c[1]===ini); return c?c[0]:ini; };
 
 /* ---------- Stockage ---------- */
 const DB={
@@ -568,12 +667,14 @@ const DB={
   useMemory(){ this.mem=new Map(); },
   req(mode,fn){ return new Promise((res,rej)=>{ const st=this.db.transaction('tickets',mode).objectStore('tickets'); const r=fn(st); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); },
   async all(){ const l=this.mem?[...this.mem.values()]:await this.req('readonly',s=>s.getAll());
-    l.forEach(t=>{ if(!t.status) t.status='done'; }); return l.sort((a,b)=>a.created-b.created); },
-  get(id){ return this.mem?Promise.resolve(this.mem.get(id)):this.req('readonly',s=>s.get(id)); },
+    l.forEach(normT); return l.sort((a,b)=>a.created-b.created); },
+  async get(id){ const t=this.mem?this.mem.get(id):await this.req('readonly',s=>s.get(id)); return t&&normT(t); },
   put(t){ if(this.mem){this.mem.set(t.id,t);return Promise.resolve();} return this.req('readwrite',s=>s.put(t)); },
   del(id){ if(this.mem){this.mem.delete(id);return Promise.resolve();} return this.req('readwrite',s=>s.delete(id)); }
 };
 
+function normT(t){ if(!t.status) t.status='done'; t.people=t.people||[];
+  if(t.me){ if(!t.people.includes(t.me)) t.people=[t.me,...t.people]; delete t.me; } return t; }
 /* ---------- UI utilitaires ---------- */
 const Bar={
   show(label,p,block){ $('#bar').classList.add('on'); const f=$('#barFill');
@@ -616,8 +717,8 @@ async function ocrCanvas(c,label){
     ocrLogger=m=>{ if(m.status==='recognizing text') Bar.show(`${label} — lecture ${Math.round((m.progress||0)*100)} %`,null,true);
       else if(/load/i.test(m.status||'')) Bar.show('Chargement du moteur de lecture (1re fois)…',null,true); };
     const {w}=await getOcr(); const res=await w.recognize(c); ocrLogger=null;
-    const lines=(res.data&&res.data.lines)||[];
-    return { full:(res.data&&res.data.text)||'', top:lines.filter(l=>l.bbox&&l.bbox.y0<c.height*0.3).map(l=>l.text).join('\n') };
+    const items=((res.data&&res.data.words)||[]).map(w=>({str:w.text,x:w.bbox.x0,y:w.bbox.y1,h:w.bbox.y1-w.bbox.y0}));
+    return itemsToText(items,c.height);
   }catch(e){ ocrLogger=null; console.warn('OCR',e); return null; }
 }
 function cvReady(timeout){
@@ -679,17 +780,18 @@ async function renderPdfPage(doc,p){
   await page.render({canvasContext:x,viewport:vp}).promise;
   let text=null;
   try{ const tc=await page.getTextContent();
-    const items=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>{ const [px,py]=vp1.convertToViewportPoint(i.transform[4],i.transform[5]); return {str:i.str,x:px,y:py}; });
+    const items=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>{ const [px,py]=vp1.convertToViewportPoint(i.transform[4],i.transform[5]); return {str:i.str,x:px,y:py,h:i.height||Math.abs(i.transform[3])||12}; });
     text=itemsToText(items,vp1.height); }catch(e){}
   try{ page.cleanup(); }catch(e){}
   return {canvas:c,text};
 }
-const ctxAnalyse=()=>({colleagues:settings.colleagues,recentProjects:settings.recentProjects,now:new Date()});
-async function makeDraft(canvas,text,prev,order,label){
+const ctxAnalyse=ref=>({colleagues:settings.colleagues,projects:settings.projects,recentProjects:settings.recentProjects,now:new Date(),ref:ref||new Date()});
+function pdfDate(s){ const m=/D:(\d{4})(\d\d)(\d\d)/.exec(s||''); return m?new Date(+m[1],+m[2]-1,+m[3]):null; }
+async function makeDraft(canvas,text,prev,order,label,ref){
   if(!text||text.full.replace(/\s/g,'').length<15) text=await ocrCanvas(canvas,label)||text;
-  const a=analyzeTicket(text,prev,ctxAnalyse());
+  const a=analyzeTicket(text,prev,ctxAnalyse(ref));
   const {bytes,thumb}=await lightJpeg(canvas);
-  const t={id:uid(),created:Date.now()+order,status:'draft',date:a.date,projet:a.projet,type:'',people:a.people,me:settings.me,src:a.src,jpeg:bytes.buffer,thumb};
+  const t={id:uid(),created:Date.now()+order,status:'draft',date:a.date,projet:a.projet,type:'',people:a.people,src:a.src,jpeg:bytes.buffer,thumb};
   await DB.put(t); return t;
 }
 async function importFiles(e){
@@ -702,11 +804,12 @@ async function importFiles(e){
         Bar.show('Chargement du lecteur PDF…',null,true);
         const {lib}=await loadPdfJs();
         const doc=await lib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise, n=doc.numPages;
+        let ref=null; try{ const md=await doc.getMetadata(); ref=pdfDate(md&&md.info&&md.info.CreationDate); }catch(_){}
         for(let p=1;p<=n;p++){
           const label=`Analyse du ticket ${p}/${n}`;
           Bar.show(label,(p-1)/n,true); await raf();
           const {canvas,text}=await renderPdfPage(doc,p);
-          prev=await makeDraft(canvas,text,prev,k++,label); ids.push(prev.id);
+          prev=await makeDraft(canvas,text,prev,k++,label,ref); ids.push(prev.id);
         }
         try{ doc.destroy(); }catch(_){}
       } else {
@@ -721,31 +824,21 @@ async function importFiles(e){
     toast(/réseau|délai/.test(err.message)?'Lecteur PDF non chargé : vérifie la connexion internet':'Impossible de lire le fichier : '+err.message,5000);
     if(!ids.length){ renderList(); return; }
   }
+  // 2e passe : dates aberrantes dans le lot, puis projet/personnes repris du ticket suivant si illisibles
+  try{ const L=[]; for(const id of ids){ const t=await DB.get(id); if(t) L.push(t); }
+    const before=L.map(t=>t.date); fixDatesBatch(L);
+    for(let j=0;j<L.length;j++) if(L[j].date!==before[j]) await DB.put(L[j]); }catch(_){}
+  try{ for(let j=ids.length-2;j>=0;j--){ const t=await DB.get(ids[j]), n=await DB.get(ids[j+1]); if(!t||!n) continue; let ch=false;
+    if(t.src.projet==='none'&&n.projet){ t.projet=n.projet; t.src.projet='prev'; ch=true; }
+    if(t.src.people==='none'&&n.people.length){ t.people=[...n.people]; t.src.people='prev'; ch=true; }
+    if(ch) await DB.put(t); } }catch(_){}
   Bar.hide(); renderList();
-  startReview(ids,true);
-}
-
-/* ---------- Qui es-tu ? ---------- */
-let whoSel=null, whoNext=null;
-function showWho(next){
-  whoNext=next; whoSel=settings.me||(settings.colleagues[0]&&settings.colleagues[0][1]);
-  const g=$('#whoGrid'); g.innerHTML='';
-  settings.colleagues.forEach(([n,ini])=>{ const b=document.createElement('button'); b.type='button';
-    b.className='chip'+(ini===whoSel?' me':''); b.innerHTML=`${esc(n)}<b>${esc(ini)}</b>`;
-    b.onclick=()=>{ whoSel=ini; g.querySelectorAll('.chip').forEach(x=>x.classList.remove('me')); b.classList.add('me'); };
-    g.appendChild(b); });
-  show('who');
+  startReview(ids);
 }
 
 /* ---------- Revue ticket par ticket ---------- */
 const R={ids:[],i:0,cur:null,people:[]};
-function startReview(ids,ask){
-  if(!ids.length) return;
-  R.ids=ids; R.i=0;
-  if(ask) showWho(async()=>{ await applyMe(ids); openReview(0); });
-  else openReview(0);
-}
-async function applyMe(ids){ for(const id of ids){ const t=await DB.get(id); if(t&&t.status==='draft'){ t.me=settings.me; await DB.put(t); } } }
+function startReview(ids){ if(!ids.length) return; R.ids=ids; R.i=0; openReview(0); }
 
 let pvUrl=null, pvTopUrl=null, curImg=null;
 async function setPreviews(t){
@@ -758,20 +851,20 @@ async function setPreviews(t){
   }catch(e){}
 }
 function setSrc(el,kind,what){
-  const m={ocr:['ok','✓ lu sur le ticket — vérifie'],prev:['warn','↺ repris du ticket précédent — vérifie'],none:['warn',`⚠️ ${what} non trouvé${what==='date'?'e':''} — à saisir`]}[kind];
+  const m={ocr:['ok','✓ lu sur le ticket — vérifie'],guess:['warn','? lecture incertaine — vérifie'],prev:['warn','↺ repris du ticket précédent — vérifie'],none:['warn',`⚠️ ${what} non trouvé${what==='date'?'e':''} — à saisir`]}[kind];
   el.className='src'+(m?' '+m[0]:''); el.textContent=m?m[1]:'';
 }
 async function openReview(i){
   R.i=i; const t=await DB.get(R.ids[i]);
   if(!t){ return nextOrFinish(); }
-  R.cur=t; t.me=t.me||settings.me;
+  R.cur=t;
   $('#revTitle').textContent=R.ids.length>1?`Ticket ${i+1} / ${R.ids.length}`:(t.status==='done'?'Modifier le ticket':'Ticket');
   $('#revProg').style.width=Math.round((i+1)/R.ids.length*100)+'%';
   $('#revPrev').disabled=i===0;
   $('#revNext').textContent=i<R.ids.length-1?'Valider → suivant':'Valider et terminer ✓';
   $('#fDate').value=t.date||''; $('#fProj').value=t.projet||''; $('#fType').value=t.type||'';
-  const inis=settings.colleagues.map(c=>c[1]), others=(t.people||[]).filter(p=>p!==t.me);
-  R.people=others.filter(p=>inis.includes(p)); $('#fExtra').value=others.filter(p=>!inis.includes(p)).join(' ');
+  const inis=settings.colleagues.map(c=>c[1]), ppl=t.people||[];
+  R.people=ppl.filter(p=>inis.includes(p)); $('#fExtra').value=ppl.filter(p=>!inis.includes(p)).join(' ');
   const s=t.status==='done'?{}:(t.src||{});
   setSrc($('#srcDate'),s.date,'date'); setSrc($('#srcProj'),s.projet,'projet'); setSrc($('#srcPeople'),s.people,'initiales');
   if(s.people==='none') $('#srcPeople').textContent='Aucune initiale reconnue — coche les personnes présentes';
@@ -791,29 +884,23 @@ function renderTypes(){
 function renderProjects(){
   const box=$('#projChips'); box.innerHTML='';
   const cur=$('#fProj').value.trim();
-  settings.recentProjects.slice(0,6).forEach(p=>{ const b=document.createElement('button'); b.type='button';
+  [...new Set([...settings.recentProjects,...settings.projects])].slice(0,8).forEach(p=>{ const b=document.createElement('button'); b.type='button';
     b.className='chip'+(p===cur?' on':''); b.textContent=p;
     b.onclick=()=>{ $('#fProj').value=p; $('#srcProj').textContent=''; renderProjects(); updateName(); }; box.appendChild(b); });
 }
 function renderPeople(){
   const box=$('#peopleChips'); box.innerHTML='';
-  const me=R.cur&&R.cur.me;
-  const meB=document.createElement('button'); meB.type='button'; meB.className='chip me';
-  meB.innerHTML=`👤 ${esc(nameOf(me))}<b>${esc(me)}</b>`; meB.title='Changer';
-  meB.onclick=()=>{ saveCurrent(); showWho(async()=>{ R.cur.me=settings.me; await DB.put(R.cur); await applyMe(R.ids); openReview(R.i); }); };
-  box.appendChild(meB);
-  settings.colleagues.forEach(([name,ini])=>{ if(ini===me) return;
+  settings.colleagues.forEach(([name,ini])=>{
     const b=document.createElement('button'); b.type='button';
     const k=R.people.indexOf(ini); b.className='chip'+(k>=0?' on':'');
-    b.innerHTML=`${esc(name)}<b>${esc(ini)}</b>${k>=0?`<i>${k+2}</i>`:''}`;
+    b.innerHTML=`${esc(name)}<b>${esc(ini)}</b>${k>=0?`<i>${k+1}</i>`:''}`;
     b.onclick=()=>{ const j=R.people.indexOf(ini); if(j>=0) R.people.splice(j,1); else R.people.push(ini); $('#srcPeople').textContent=''; renderPeople(); updateName(); };
     box.appendChild(b); });
 }
 function readForm(){
-  const me=R.cur&&R.cur.me;
   const extras=$('#fExtra').value.split(/[\s,;_\/]+/).map(x=>sanitize(x).toUpperCase()).filter(Boolean);
-  const people=[...R.people,...extras.filter(x=>!R.people.includes(x))].filter(p=>p!==me);
-  return { date:$('#fDate').value, projet:sanitize($('#fProj').value), type:sanitize($('#fType').value), people, me };
+  const people=[...R.people,...extras.filter(x=>!R.people.includes(x))];
+  return { date:$('#fDate').value, projet:sanitize($('#fProj').value), type:sanitize($('#fType').value), people };
 }
 function validate(d){ const m=[]; if(!d.date) m.push('la date'); if(!d.projet) m.push('le n° de projet'); if(!d.type) m.push('le type'); return m.length?'Il manque '+m.join(', ')+'.':''; }
 function updateName(){ $('#fName').textContent=buildName(readForm())+'.pdf'; $('#formErr').textContent=''; }
@@ -826,7 +913,9 @@ async function validateCurrent(){
   const d=readForm(), err=validate(d);
   if(err){ $('#formErr').textContent=err; $('#formErr').scrollIntoView({block:'center',behavior:'smooth'}); return; }
   await saveCurrent(true);
-  settings.recentProjects=[d.projet,...settings.recentProjects.filter(p=>p!==d.projet)].slice(0,8); saveSettings();
+  settings.recentProjects=[d.projet,...settings.recentProjects.filter(p=>p!==d.projet)].slice(0,8);
+  if(/^\d{4,6}$/.test(d.projet)&&!settings.projects.includes(d.projet)) settings.projects=[d.projet,...settings.projects].slice(0,30);
+  saveSettings();
   // propage projet/personnes aux tickets suivants qui n'ont rien trouvé
   for(let j=R.i+1;j<R.ids.length;j++){ const t=await DB.get(R.ids[j]); if(!t||t.status!=='draft') continue; let ch=false;
     if(t.src&&t.src.projet!=='ocr'&&!t.projetTouched){ t.projet=d.projet; t.src.projet='prev'; ch=true; }
@@ -977,7 +1066,7 @@ async function cropOk(){
   const prev={projet:settings.recentProjects[0]||'',people:[]};
   const t=await makeDraft(processed,null,prev,0,'Analyse du ticket');
   Bar.hide(); S.src=null; renderList();
-  startReview([t.id],false);
+  startReview([t.id]);
 }
 
 /* ---------- Liste d'accueil ---------- */
@@ -991,7 +1080,7 @@ async function renderList(){
   done.forEach(t=>{ const el=document.createElement('div'); el.className='item';
     el.innerHTML=`<img src="${t.thumb}" alt=""><div class="meta"><code>${esc(buildName(t))}.pdf</code><small>${frDate(t.date)} · projet ${esc(t.projet)}</small></div><button class="icon" aria-label="Supprimer">🗑</button>`;
     el.querySelector('button').onclick=async ev=>{ ev.stopPropagation(); if(confirm('Supprimer ce ticket ?')){ await DB.del(t.id); renderList(); } };
-    el.onclick=()=>startReview([t.id],false); box.appendChild(el); });
+    el.onclick=()=>startReview([t.id]); box.appendChild(el); });
 }
 
 /* ---------- Export ---------- */
@@ -1056,6 +1145,7 @@ function openSettings(){
   $('#sEmail').value=settings.email;
   $('#sColl').value=settings.colleagues.map(([n,i])=>`${n} = ${i}`).join('\n');
   $('#sBanner').checked=!!settings.banner; $('#sGray').checked=!!settings.gray;
+  $('#sProj').value=settings.projects.join(', ');
   show('settings');
 }
 function saveSettingsForm(){
@@ -1065,7 +1155,7 @@ function saveSettingsForm(){
     const parts=l.split(/\s*[=:]\s*/), name=parts[0].trim(), ini=sanitize(parts.length>1?parts[1]:parts[0]).toUpperCase();
     if(ini&&!list.some(c=>c[1]===ini)) list.push([name||ini,ini]); });
   if(list.length) settings.colleagues=list;
-  if(!settings.colleagues.some(c=>c[1]===settings.me)) settings.me=settings.colleagues[0][1];
+  settings.projects=[...new Set($('#sProj').value.split(/[\s,;]+/).map(sanitize).filter(Boolean))];
   settings.banner=$('#sBanner').checked; settings.gray=$('#sGray').checked;
   saveSettings(); toast('✓ Réglages enregistrés'); show('home');
 }
@@ -1076,11 +1166,9 @@ function wire(){
   $('#btnScan').onclick=()=>$('#inCam').click();
   $('#btnImport').onclick=()=>$('#inLib').click();
   $('#inPdf').onchange=importFiles; $('#inCam').onchange=onPhoto; $('#inLib').onchange=onPhoto;
-  $('#btnResume').onclick=async()=>{ const ids=(await DB.all()).filter(t=>t.status==='draft').map(t=>t.id); startReview(ids,true); };
+  $('#btnResume').onclick=async()=>{ const ids=(await DB.all()).filter(t=>t.status==='draft').map(t=>t.id); startReview(ids); };
   $('#btnSettings').onclick=openSettings; $('#setBack').onclick=()=>show('home'); $('#setSave').onclick=saveSettingsForm;
   $('#sClear').onclick=async()=>{ if(confirm('Supprimer définitivement tous les tickets ?')){ for(const t of await DB.all()) await DB.del(t.id); renderList(); toast('Tickets supprimés'); } };
-  $('#whoBack').onclick=()=>{ renderList(); show('home'); };
-  $('#whoOk').onclick=()=>{ settings.me=whoSel; saveSettings(); if(whoNext) whoNext(); };
   $('#revBack').onclick=async()=>{ await saveCurrent(); R.cur=null; renderList(); show('home'); };
   $('#revPrev').onclick=async()=>{ if(R.i>0){ await saveCurrent(); openReview(R.i-1); } };
   $('#revNext').onclick=validateCurrent;
