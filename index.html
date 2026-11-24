@@ -1409,7 +1409,8 @@ function shareNow(){
   if(!prepared) return;
   const files=prepared.map(f=>f.file), ids=prepared.map(f=>f.id);
   if(!(navigator.canShare&&navigator.canShare({files}))){ toast('Partage de fichiers non supporté ici : utilise le ZIP',4000); return; }
-  const p=navigator.share({files,title:mailSubject(prepared),text:mailMessage(prepared)});
+  // iOS met la 1re ligne du texte en objet : on y place l'objet, puis le message
+  const p=navigator.share({files,title:mailSubject(prepared),text:mailSubject(prepared)+'\n\n'+mailMessage(prepared)});
   if(settings.email&&navigator.clipboard&&navigator.clipboard.writeText)
     navigator.clipboard.writeText(settings.email).then(()=>toast('Adresse copiée : colle-la dans « À »',4000)).catch(()=>{});
   p.then(()=>{ closeModal(); setTimeout(async()=>{ if(confirm('Envoi terminé ?\nRetirer ces tickets de la liste ?')){ for(const id of ids) await DB.del(id); renderList(); toast('Liste vidée'); } },500); })
