@@ -38,7 +38,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:16px/1
 .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
 .bottom{padding:12px 16px calc(env(safe-area-inset-bottom) + 12px);background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(33,50,82,.05)}
 .bottom.row{display:flex;gap:8px}
-button{font:inherit;color:inherit;border:0;cursor:pointer}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .big{width:100%;padding:15px;border-radius:var(--r);background:var(--panel);color:var(--navy);font-size:16px;font-weight:600;border:1px solid var(--line);box-shadow:var(--sh)}
 .huge{padding:24px 16px;font-size:18px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .huge small{font-size:13px;font-weight:400;opacity:.85}
@@ -182,11 +182,6 @@ p.center{margin:-6px 0 0}
     <p class="muted">Ton nom sera placé <b>en premier</b> dans le nom de chaque fichier de ce lot.</p>
     <div class="whoGrid" id="whoGrid"></div>
     <button class="btn" id="whoAddBtn">Je ne suis pas dans la liste</button>
-    <div class="card" id="whoAdd" hidden>
-      <div class="field"><span>Prénom</span><input id="whoName" autocomplete="given-name" placeholder="ex : Camille"></div>
-      <div class="field" style="margin-top:10px"><span>Initiales</span><input id="whoIni" autocapitalize="characters" autocorrect="off" maxlength="4" placeholder="ex : CJ"></div>
-      <button class="big primary" id="whoAddOk" style="margin-top:12px">Ajouter et me choisir</button>
-    </div>
   </main>
   <footer class="bottom"><button class="big primary" id="whoOk" disabled>Continuer</button></footer>
 </section>
@@ -223,7 +218,7 @@ p.center{margin:-6px 0 0}
     <div class="field"><span>Personnes <small>(toi en premier, puis dans l'ordre choisi)</small></span>
       <div class="chips" id="peopleChips"></div>
       <small class="src" id="srcPeople"></small>
-      <input id="fExtra" autocomplete="off" autocapitalize="characters" autocorrect="off" placeholder="Autres initiales (ex : CJ)">
+      <input id="fExtra" autocomplete="off" autocapitalize="characters" autocorrect="off" placeholder="Autres initiales (ex : SS)">
     </div>
     <div class="namebox"><small class="muted">Nom du fichier</small><code id="fName"></code></div>
     <div id="formErr" class="err"></div>
@@ -299,6 +294,17 @@ p.center{margin:-6px 0 0}
   </main>
   <footer class="bottom"><button class="big primary" id="setSave">Enregistrer les réglages</button></footer>
 </section>
+
+<!-- ===================== AJOUT D'UNE PERSONNE ===================== -->
+<div id="whoAdd" class="modal" hidden>
+  <div class="sheet">
+    <h2>Ajouter mon nom</h2>
+    <div class="field"><span>Prénom</span><input id="whoName" autocomplete="given-name" placeholder="ex : Sacha"></div>
+    <div class="field"><span>Initiales</span><input id="whoIni" autocapitalize="characters" autocorrect="off" maxlength="4" placeholder="ex : SS"></div>
+    <button class="big primary" id="whoAddOk">Ajouter et me choisir</button>
+    <button class="link" id="whoAddCancel">Annuler</button>
+  </div>
+</div>
 
 <!-- ===================== ENVOI ===================== -->
 <div id="modal" class="modal" hidden>
@@ -836,7 +842,7 @@ const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.m
 const OPENCV_URLS=['https://docs.opencv.org/4.10.0/opencv.js','https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js'];
 const DEFAULT_EMAIL='administration@meanwhile-france.com';
 const DEFAULT_COLLEAGUES=[['Arthur','AC'],['Julien','JM'],['Laurent','LD'],['Sacha','SC'],['Dorian','DLB'],['Simon','SLP'],['Xavier','XF'],['Clément','CV']];
-const TYPES=[['Restaurant','restaurant'],['Logement','logement'],['Transport','transport'],['Autre','']];
+const TYPES=[['Restaurant','restaurant'],['Logement','logement'],['Transport','transport'],['Péage','peage'],['Autre','']];
 const LIGHT={long:1700,short:1250,q:0.6};
 
 const $=s=>document.querySelector(s);
@@ -1436,7 +1442,9 @@ function wire(){
   $('#btnResume').onclick=async()=>{ const l=(await DB.all()).filter(t=>t.status==='draft'); startReview(l.map(t=>t.id),true,l[0]&&l[0].me); };
   $('#whoBack').onclick=()=>{ renderList(); show('home'); };
   $('#whoOk').onclick=()=>{ if(whoSel&&whoNext) whoNext(whoSel); };
-  $('#whoAddBtn').onclick=()=>{ $('#whoAdd').hidden=false; $('#whoName').focus(); };
+  $('#whoAddBtn').onclick=e=>{ e.preventDefault(); $('#whoAdd').hidden=false; };
+  $('#whoAddCancel').onclick=()=>{ $('#whoAdd').hidden=true; };
+  $('#whoAdd').onclick=e=>{ if(e.target.id==='whoAdd') $('#whoAdd').hidden=true; };
   $('#whoAddOk').onclick=whoAdd;
   $('#sComp').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; document.querySelectorAll('#sComp button').forEach(x=>x.classList.toggle('on',x===b)); };
   $('#btnSettings').onclick=openSettings; $('#setBack').onclick=()=>show('home'); $('#setSave').onclick=saveSettingsForm;
