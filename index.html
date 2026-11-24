@@ -213,7 +213,7 @@ p.center{margin:-6px 0 0}
     </div>
     <div class="field"><span>Type</span>
       <div class="chips" id="typeChips"></div>
-      <input id="fType" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="ex : 2_nuits_logement">
+      <input id="fType" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="Autre type, ex : 2_nuits_logement">
     </div>
     <div class="field"><span>Personnes <small>(toi en premier, puis dans l'ordre choisi)</small></span>
       <div class="chips" id="peopleChips"></div>
@@ -837,7 +837,7 @@ const DEFAULT_EMAIL='administration@meanwhile-france.com';
 const DEFAULT_MSG='Coucou le pôle admin, voici mes facturettes {periode}.\n\nBonne journée, je vous aime';
 const DEFAULT_COLLEAGUES=[['Arthur','AC'],['Clément','CV'],['Dorian','DLB'],['Julien','JM'],['Laurent','LD'],['Sacha','SC'],['Simon','SLP'],['Xavier','XF']];
 const sortColl=l=>[...l].sort((a,b)=>a[0].localeCompare(b[0],'fr',{sensitivity:'base'})||a[1].localeCompare(b[1]));
-const TYPES=[['🍽️ Restaurant','restaurant'],['🛏️ Logement','logement'],['🛣️ Péage','peage'],['✏️ Autre','']];
+const TYPES=[['🍽️ Restaurant','restaurant'],['🛏️ Logement','logement'],['🛂 Péage','peage']];
 const LIGHT={long:1700,short:1250,q:0.6};
 
 const $=s=>document.querySelector(s);
