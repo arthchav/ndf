@@ -1449,8 +1449,8 @@ function wire(){
     if(!R.ids.length){ renderList(); show('home'); return; }
     if(R.i>=R.ids.length) R.i=R.ids.length-1; openReview(R.i); };
   $('#pvBox').onclick=()=>openViewer(pvUrl,1);
-  $('#pvTopBox').onclick=()=>openViewer(pvUrl,1.6,{x:0.5,y:0.05});
-  $('#zoomTop').onclick=()=>openViewer(pvUrl,1.6,{x:0.5,y:0.05});
+  $('#pvTopBox').onclick=()=>openViewer(pvUrl,1.4,{x:0,y:0.05});
+  $('#zoomTop').onclick=()=>openViewer(pvUrl,1.4,{x:0,y:0.05});
   const zoomDate=()=>{ if(R.cur&&R.cur.dateAt) openViewer(pvUrl,2.5,R.cur.dateAt); else { toast('Position de la date inconnue : ticket en plein écran'); openViewer(pvUrl,1); } };
   $('#zoomDate').onclick=zoomDate; $('#pvDateBox').onclick=zoomDate;
   $('#rotR').onclick=async()=>{ if(!R.cur) return; Bar.show('Rotation…',null,true);
