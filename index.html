@@ -278,18 +278,6 @@ p.center{margin:-6px 0 0}
       <div class="seg" id="sComp"><button data-c="standard">Standard<br><small>~100 Ko</small></button><button data-c="leger">Léger<br><small>~70 Ko</small></button><button data-c="ultra">Ultra-léger<br><small>~20 Ko, N&amp;B pur</small></button></div>
     </div>
     <details class="card">
-      <summary>Mail 100 % prêt avec un Raccourci iOS</summary>
-      <p>Une page web ne peut pas pré-remplir le destinataire d'un mail avec pièces jointes. Un Raccourci le fait :</p>
-      <ol>
-        <li>Ouvre l'app <b>Raccourcis</b>, touche <b>+</b> et nomme le raccourci « Facturettes ».</li>
-        <li>Ajoute l'action <b>Envoyer un e-mail</b>.</li>
-        <li>Destinataire : ton adresse compta. Objet : « Notes de frais ». Dans le message, insère la variable <b>Entrée du raccourci</b> (= les PDF).</li>
-        <li>Réglages du raccourci (bouton i) : active <b>Afficher dans la feuille de partage</b>, type accepté : <b>Fichiers</b>.</li>
-        <li>Option : désactive « Afficher la fiche de composition » pour un envoi direct.</li>
-      </ol>
-      <p>Ensuite : Envoyer, Partager, puis « Facturettes ». (Les intitulés peuvent varier un peu selon la version d'iOS.)</p>
-    </details>
-    <details class="card">
       <summary>Installer sur l'écran d'accueil</summary>
       <p>Dans ton navigateur : Partager, puis « Sur l'écran d'accueil ». Envoie tes tickets régulièrement : iOS peut effacer les données d'un site non utilisé pendant plusieurs semaines.</p>
     </details>
@@ -1398,7 +1386,7 @@ async function prepareExport(){
   $('#mTitle').textContent=`${files.length} PDF prêt${files.length>1?'s':''} · ${fmtSize(total)}`;
   $('#mList').innerHTML=files.map(f=>`<li>${esc(f.name)} <span class="muted">(${fmtSize(f.data.length)})</span></li>`).join('');
   $('#mMsg').textContent=mailMessage(files);
-  $('#mHint').textContent=`Les ${files.length} PDF partent séparément (pas de ZIP). `+(settings.email?`Dans Mail, colle l'adresse (déjà copiée) dans « À ». Pour un mail 100 % prêt : Raccourci iOS (voir les réglages).`:`Renseigne l'adresse dans les réglages pour qu'elle soit copiée automatiquement.`);
+  $('#mHint').textContent=`Les ${files.length} PDF partent séparément (pas de ZIP). `+(settings.email?`Dans Mail, colle l'adresse (déjà copiée) dans « À ».`:`Renseigne l'adresse dans les réglages pour qu'elle soit copiée automatiquement.`);
   $('#modal').hidden=false;
 }
 function closeModal(){ $('#modal').hidden=true; }
