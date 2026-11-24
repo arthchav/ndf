@@ -1,6 +1,6 @@
 {
-  "name": "Notes de frais",
-  "short_name": "Notes de frais",
+  "name": "Facturettes",
+  "short_name": "Facturettes",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#F3F5F9",

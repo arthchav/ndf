@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Notes de frais">
+<meta name="apple-mobile-web-app-title" content="Facturettes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#213252">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<title>Notes de frais</title>
+<title>Facturettes</title>
 <style>
 /* Charte Meanwhile : marine #213252, bleu #4A7AD7, rouge #E22D4B, texte #4A4A4A, Open Sans */
 :root{--navy:#213252;--navy2:#2c4069;--blue:#4A7AD7;--blueL:#EAF0FB;--red:#E22D4B;--txt:#4A4A4A;--mut:#7A7A7A;--line:#D9D9D9;--bg:#F3F5F9;--panel:#fff;--panel2:#F6F7F9;--ok:#1F9D6B;--warn:#D97A12;--err:#E22D4B;--r:14px;
@@ -25,6 +25,9 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:16px/1
 .screen.active{display:flex}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(env(safe-area-inset-top) + 14px) 18px 16px;background:var(--navy);color:#fff;position:relative}
 .top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--blue) 0 70%,var(--red) 70% 100%)}
+.brandrow{display:flex;align-items:center;gap:12px}
+.top .logo{height:24px;width:auto;display:block}
+.top .receipt{height:26px;width:20px;display:block;margin:0 4px 0 -2px}
 .top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;color:#fff}
 .top .sub{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px}
 .top.slim{padding-bottom:14px}
@@ -152,7 +155,7 @@ p.center{margin:-6px 0 0}
 <!-- ===================== ACCUEIL ===================== -->
 <section id="home" class="screen active">
   <header class="top">
-    <div><h1>Notes de frais</h1></div>
+    <div class="brandrow"><img class="logo" src="logo-header.png" alt="Meanwhile"><svg class="receipt" viewBox="0 0 20 26" aria-hidden="true"><path d="M2 2h16v21l-2.67-1.6-2.66 1.6-2.67-1.6-2.67 1.6-2.66-1.6L2 23z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" transform="rotate(-6 10 13)"/><path d="M6 8h8M6 12h8M6 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round" transform="rotate(-6 10 13)"/></svg><h1>Facturettes</h1></div>
     <button class="icon" id="btnSettings" aria-label="Réglages"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </header>
   <main class="content">
@@ -278,20 +281,20 @@ p.center{margin:-6px 0 0}
       <summary>Mail 100 % prêt avec un Raccourci iOS</summary>
       <p>Une page web ne peut pas pré-remplir le destinataire d'un mail avec pièces jointes. Un Raccourci le fait :</p>
       <ol>
-        <li>Ouvre l'app <b>Raccourcis</b>, touche <b>+</b> et nomme le raccourci « Notes de frais ».</li>
+        <li>Ouvre l'app <b>Raccourcis</b>, touche <b>+</b> et nomme le raccourci « Facturettes ».</li>
         <li>Ajoute l'action <b>Envoyer un e-mail</b>.</li>
         <li>Destinataire : ton adresse compta. Objet : « Notes de frais ». Dans le message, insère la variable <b>Entrée du raccourci</b> (= les PDF).</li>
         <li>Réglages du raccourci (bouton i) : active <b>Afficher dans la feuille de partage</b>, type accepté : <b>Fichiers</b>.</li>
         <li>Option : désactive « Afficher la fiche de composition » pour un envoi direct.</li>
       </ol>
-      <p>Ensuite : Envoyer, Partager, puis « Notes de frais ». (Les intitulés peuvent varier un peu selon la version d'iOS.)</p>
+      <p>Ensuite : Envoyer, Partager, puis « Facturettes ». (Les intitulés peuvent varier un peu selon la version d'iOS.)</p>
     </details>
     <details class="card">
       <summary>Installer sur l'écran d'accueil</summary>
       <p>Dans Safari : Partager, puis « Sur l'écran d'accueil ». Envoie tes tickets régulièrement : iOS peut effacer les données d'un site non utilisé pendant plusieurs semaines.</p>
     </details>
     <button class="big danger" id="sClear">Supprimer tous les tickets</button>
-    <p class="muted small center">Notes de frais v5.0<br>Tout est traité sur le téléphone.<br>Lecture : réseau de neurones maison (chiffres manuscrits) · Tesseract.js · PDF.js · OpenCV.js</p>
+    <p class="muted small center">Facturettes v5.1<br>Tout est traité sur le téléphone.<br>Lecture : réseau de neurones maison (chiffres manuscrits) · Tesseract.js · PDF.js · OpenCV.js</p>
   </main>
   <footer class="bottom"><button class="big primary" id="setSave">Enregistrer les réglages</button></footer>
 </section>
@@ -780,7 +783,7 @@ function makePdfImage(img,title){
   const content=`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
   obj(5,`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   const safeTitle=String(title||'Ticket').replace(/[^\x20-\x7E]/g,'').replace(/[()\\]/g,'');
-  obj(6,`<< /Title (${safeTitle}) /Producer (Notes de frais) >>`);
+  obj(6,`<< /Title (${safeTitle}) /Producer (Facturettes) >>`);
   const xref=len; let x='xref\n0 7\n0000000000 65535 f \n';
   for(let i=1;i<=6;i++) x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
   push(x+`trailer\n<< /Size 7 /Root 1 0 R /Info 6 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
@@ -1371,7 +1374,7 @@ function shareNow(){
   if(!prepared) return;
   const files=prepared.map(f=>f.file), ids=prepared.map(f=>f.id);
   if(!(navigator.canShare&&navigator.canShare({files}))){ toast('Partage de fichiers non supporté ici : utilise le ZIP',4000); return; }
-  const p=navigator.share({files,title:'Notes de frais'});
+  const p=navigator.share({files,title:'Facturettes'});
   if(settings.email&&navigator.clipboard&&navigator.clipboard.writeText)
     navigator.clipboard.writeText(settings.email).then(()=>toast('Adresse copiée : colle-la dans « À »',4000)).catch(()=>{});
   p.then(()=>{ closeModal(); setTimeout(async()=>{ if(confirm('Envoi terminé ?\nRetirer ces tickets de la liste ?')){ for(const id of ids) await DB.del(id); renderList(); toast('Liste vidée'); } },500); })
@@ -1379,7 +1382,7 @@ function shareNow(){
 }
 function downloadZip(){
   if(!prepared) return;
-  const d=new Date(), name=`Notes_de_frais_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.zip`;
+  const d=new Date(), name=`Facturettes_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.zip`;
   const url=URL.createObjectURL(new Blob([makeZip(prepared)],{type:'application/zip'}));
   const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),60000);
