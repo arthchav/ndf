@@ -261,7 +261,7 @@ p.center{margin:-6px 0 0}
   </header>
   <main class="content">
     <label class="field"><span>Adresse mail de destination</span>
-      <input type="email" id="sEmail" placeholder="compta@exemple.fr" autocapitalize="off" autocorrect="off">
+      <input type="email" id="sEmail" placeholder="administration@meanwhile-france.com" autocapitalize="off" autocorrect="off">
       <small class="muted">Copiée automatiquement au moment de l'envoi : il suffit de la coller dans « À ». Elle reste sur ton téléphone.</small>
     </label>
     <label class="field"><span>Collègues — une ligne par personne : Prénom = INITIALES</span>
@@ -827,6 +827,7 @@ const PDFJS_URL='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.
 const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const OPENCV_URLS=['https://docs.opencv.org/4.10.0/opencv.js','https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js'];
+const DEFAULT_EMAIL='administration@meanwhile-france.com';
 const DEFAULT_COLLEAGUES=[['Arthur','AC'],['Julien','JM'],['Laurent','LD'],['Sacha','SC'],['Dorian','DLB'],['Simon','SLP'],['Xavier','XF'],['Clément','CV']];
 const TYPES=[['Restaurant','restaurant'],['Logement','logement'],['Transport','transport'],['Autre','']];
 const LIGHT={long:1700,short:1250,q:0.6};
@@ -841,7 +842,7 @@ const fmtSize=n=>n>1048576?(n/1048576).toFixed(1).replace('.',',')+' Mo':Math.ro
 
 /* ---------- Réglages ---------- */
 const settings=(()=>{
-  const def={v:4,email:'',colleagues:DEFAULT_COLLEAGUES,projects:[],range:[40030,40100],compress:'leger',gray:true,recentProjects:[],tipClosed:false};
+  const def={v:4,email:DEFAULT_EMAIL,colleagues:DEFAULT_COLLEAGUES,projects:[],range:[40030,40100],compress:'leger',gray:true,recentProjects:[],tipClosed:false};
   let s; try{ s=Object.assign(def,JSON.parse(localStorage.getItem('ndf_settings')||'{}')); }catch(e){ s=def; }
   if(!(s.v>=3)){ // migration -> v3 : Arthur en tête de liste, plus de « moi » imposé, liste de projets
     s.colleagues=[['Arthur','AC'],...s.colleagues.filter(c=>c[1]!=='AC')];
@@ -850,6 +851,7 @@ const settings=(()=>{
   if(s.v<4){ // v4 : site vierge de projets (on ne garde que ceux réellement validés), plage de recherche
     s.projects=[...new Set(s.recentProjects||[])]; s.range=s.range||[40030,40100]; s.compress=s.compress||'leger'; s.v=4;
   }
+  if(!s.email) s.email=DEFAULT_EMAIL; // adresse par défaut
   if(s.range&&s.range[0]===40030&&s.range[1]===41000) s.range=[40030,40100]; // ancienne plage par défaut
   return s;
 })();
