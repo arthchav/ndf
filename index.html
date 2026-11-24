@@ -201,10 +201,11 @@ p.center{margin:-6px 0 0}
   <div class="progress"><div id="revProg"></div></div>
   <main class="content" id="revContent">
     <div class="preview" id="pvBox"><img id="pv" alt="Aperçu du ticket"></div>
-    <div class="preview strip" id="pvTopBox"><img id="pvTop" alt="Haut du ticket"><span class="lbl">Haut du ticket</span></div>
+    <div class="preview strip" id="pvTopBox"><img id="pvTop" alt="Projet et initiales"><span class="lbl">Projet et initiales</span></div>
+    <div class="preview strip" id="pvDateBox" hidden><img id="pvDate" alt="Date"><span class="lbl">Date</span></div>
     <div class="tools">
-      <button class="btn" id="zoomTop">Zoom haut</button>
-      <button class="btn" id="zoomAll">Plein écran</button>
+      <button class="btn" id="zoomTop">Zoom projet / initiales</button>
+      <button class="btn" id="zoomDate">Zoom date</button>
       <button class="btn" id="rotR">Pivoter</button>
     </div>
     <label class="field"><span>Date du ticket</span>
@@ -352,13 +353,14 @@ function handRowInfo(items,pageH){
   }
   return {s:'',y:null};
 }
-function itemsToText(items,pageH){
+function itemsToText(items,pageH,pageW){
   const it=items.filter(i=>i.str&&i.str.trim()).sort((a,b)=>(a.y-b.y)||(a.x-b.x));
   const lines=[]; let cur=null;
   for(const i of it){ if(!cur||Math.abs(i.y-cur.y)>Math.max(4,0.5*Math.min(i.h||8,cur.h||8))){ cur={y:i.y,h:i.h||8,parts:[]}; lines.push(cur); } cur.parts.push(i); }
   const txt=l=>l.parts.sort((a,b)=>a.x-b.x).map(p=>p.str).join(' ').replace(/\s+/g,' ').trim();
   const hr=handRowInfo(items,pageH);
-  return { full:lines.map(txt).join('\n'), top:lines.filter(l=>l.y<pageH*0.3).map(txt).join('\n'), hand:hr.s, handY:hr.y };
+  const pos=lines.map(l=>{ const xs=l.parts.map(p=>p.x); return {t:txt(l), y:l.y/pageH, x:pageW?((Math.min(...xs)+Math.max(...xs))/2)/pageW:0.5}; });
+  return { full:lines.map(txt).join('\n'), top:lines.filter(l=>l.y<pageH*0.3).map(txt).join('\n'), hand:hr.s, handY:hr.y, lines:pos };
 }
 
 /* Coupe la ligne manuscrite "PROJET - INI / INI" */
@@ -513,7 +515,12 @@ function analyzeTicket(texts,hw,prev,ctx){
   let people=[]; for(const p of parts){ for(const i of findInitialsHand(p.right,ctx.colleagues)) if(!people.includes(i)) people.push(i); if(people.length) break; }
   src.people=people.length?'ocr':'none';
   if(!people.length&&prev&&prev.people&&prev.people.length){ people=[...prev.people]; src.people='prev'; }
-  return {date:date||'',projet,people,src};
+  let dateAt=null;
+  if(date) for(const t of texts){ const L=t.lines||[];
+    for(let i=0;i<L.length&&!dateAt;i++){ const one=findDate(L[i].t,ctx.ref||ctx.now), two=i+1<L.length?findDate(L[i].t+' '+L[i+1].t,ctx.ref||ctx.now):null;
+      if(one===date) dateAt={y:L[i].y,x:L[i].x}; else if(two===date) dateAt={y:(L[i].y+L[i+1].y)/2,x:L[i].x}; }
+    if(dateAt) break; }
+  return {date:date||'',projet,people,src,dateAt};
 }
 /* ====== Projet : vote combiné (chiffres manuscrits lus par le réseau + textes OCR + historique) ====== */
 const HW_W=[0.35,0.35,0.6,1,1];
@@ -918,7 +925,7 @@ async function ocrCanvas(c,label){
       else if(/load/i.test(m.status||'')) Bar.show('Chargement du moteur de lecture (1re fois)…',null,true); };
     const {w}=await getOcr(); const res=await w.recognize(c); ocrLogger=null;
     const items=((res.data&&res.data.words)||[]).map(w=>({str:w.text,x:w.bbox.x0,y:w.bbox.y1,h:w.bbox.y1-w.bbox.y0}));
-    return itemsToText(items,c.height);
+    return itemsToText(items,c.height,c.width);
   }catch(e){ ocrLogger=null; console.warn('OCR',e); return null; }
 }
 function cvReady(timeout){
@@ -981,7 +988,7 @@ async function renderPdfPage(doc,p){
   let text=null;
   try{ const tc=await page.getTextContent();
     const items=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>{ const [px,py]=vp1.convertToViewportPoint(i.transform[4],i.transform[5]); return {str:i.str,x:px,y:py,h:i.height||Math.abs(i.transform[3])||12}; });
-    text=itemsToText(items,vp1.height); }catch(e){}
+    text=itemsToText(items,vp1.height,vp1.width); }catch(e){}
   try{ page.cleanup(); }catch(e){}
   return {canvas:c,text};
 }
@@ -1005,7 +1012,7 @@ async function makeDraft(canvas,text,prev,order,label,ref){
     const tt=await ocrCanvas(canvas,label); if(tt){ texts.push(tt); a=analyzeTicket(texts,hw,prev,ctx); }
   }
   const {bytes,thumb}=await lightJpeg(canvas);
-  const t={id:uid(),created:Date.now()+order,status:'draft',date:a.date,projet:a.projet,type:'',people:a.people,src:a.src,jpeg:bytes.buffer,thumb};
+  const t={id:uid(),created:Date.now()+order,status:'draft',date:a.date,projet:a.projet,type:'',people:a.people,src:a.src,dateAt:a.dateAt||null,jpeg:bytes.buffer,thumb};
   await DB.put(t); return t;
 }
 async function importFiles(e){
@@ -1076,13 +1083,19 @@ function whoAdd(){
 }
 
 let pvUrl=null, pvTopUrl=null, curImg=null;
+let pvDateUrl=null;
 async function setPreviews(t){
-  if(pvUrl) URL.revokeObjectURL(pvUrl); if(pvTopUrl) URL.revokeObjectURL(pvTopUrl);
+  if(pvUrl) URL.revokeObjectURL(pvUrl); if(pvTopUrl) URL.revokeObjectURL(pvTopUrl); if(pvDateUrl) URL.revokeObjectURL(pvDateUrl); pvDateUrl=null;
+  $('#pvDateBox').hidden=!(t.dateAt&&t.date);
   pvUrl=URL.createObjectURL(new Blob([t.jpeg],{type:'image/jpeg'})); $('#pv').src=pvUrl;
   try{ const img=await bytesToImage(new Uint8Array(t.jpeg)); curImg=img;
     const h=Math.round(img.naturalHeight*Math.min(0.25,img.naturalWidth*0.45/img.naturalHeight)), c=mk(img.naturalWidth,Math.max(1,h));
     c.getContext('2d').drawImage(img,0,0);
     await new Promise(r=>c.toBlob(b=>{ if(b){ pvTopUrl=URL.createObjectURL(b); $('#pvTop').src=pvTopUrl; } r(); },'image/jpeg',0.8));
+    if(t.dateAt&&t.date){ // bande zoomée autour de la ligne de la date
+      const W=img.naturalWidth, H=img.naturalHeight, bh=Math.round(Math.min(H*0.12,W*0.22)), y0=clamp(Math.round(t.dateAt.y*H-bh*0.6),0,Math.max(0,H-bh));
+      const d=mk(W,bh); d.getContext('2d').drawImage(img,0,y0,W,bh,0,0,W,bh);
+      await new Promise(r=>d.toBlob(b=>{ if(b){ pvDateUrl=URL.createObjectURL(b); $('#pvDate').src=pvDateUrl; } r(); },'image/jpeg',0.8)); }
   }catch(e){}
 }
 function setSrc(el,kind,what){
@@ -1178,12 +1191,13 @@ async function nextOrFinish(){
 
 /* ---------- Visionneuse zoomable ---------- */
 const V={z:1};
-function openViewer(src,z){ $('#vImg').src=src; $('#viewer').hidden=false; setZoom(z||1,true); }
-function setZoom(z,top){
+function openViewer(src,z,focus){ $('#vImg').src=src; $('#viewer').hidden=false; setZoom(z||1,true,focus); }
+function setZoom(z,top,focus){
   const sc=$('#vScroll'), img=$('#vImg');
   const cx=(sc.scrollLeft+sc.clientWidth/2)/Math.max(1,sc.scrollWidth), cy=(sc.scrollTop+sc.clientHeight/2)/Math.max(1,sc.scrollHeight);
   V.z=clamp(z,1,5); img.style.width=(V.z*100)+'%'; $('#vZ').textContent=(Math.round(V.z*10)/10)+'×';
-  requestAnimationFrame(()=>{ if(top){ sc.scrollTop=0; sc.scrollLeft=0; } else { sc.scrollLeft=cx*sc.scrollWidth-sc.clientWidth/2; sc.scrollTop=cy*sc.scrollHeight-sc.clientHeight/2; } });
+  requestAnimationFrame(()=>{ if(focus){ const go=()=>{ sc.scrollTop=focus.y*sc.scrollHeight-sc.clientHeight/2; sc.scrollLeft=focus.x*sc.scrollWidth-sc.clientWidth/2; }; if(img.complete) go(); else img.onload=()=>{ img.onload=null; go(); }; }
+    else if(top){ sc.scrollTop=0; sc.scrollLeft=0; } else { sc.scrollLeft=cx*sc.scrollWidth-sc.clientWidth/2; sc.scrollTop=cy*sc.scrollHeight-sc.clientHeight/2; } });
 }
 (function wireViewer(){
   $('#vIn').onclick=()=>setZoom(V.z+0.75); $('#vOut').onclick=()=>setZoom(V.z-0.75);
@@ -1435,12 +1449,13 @@ function wire(){
     if(!R.ids.length){ renderList(); show('home'); return; }
     if(R.i>=R.ids.length) R.i=R.ids.length-1; openReview(R.i); };
   $('#pvBox').onclick=()=>openViewer(pvUrl,1);
-  $('#pvTopBox').onclick=()=>openViewer(pvUrl,2.5);
-  $('#zoomTop').onclick=()=>openViewer(pvUrl,2.5);
-  $('#zoomAll').onclick=()=>openViewer(pvUrl,1);
+  $('#pvTopBox').onclick=()=>openViewer(pvUrl,1.6,{x:0.5,y:0.05});
+  $('#zoomTop').onclick=()=>openViewer(pvUrl,1.6,{x:0.5,y:0.05});
+  const zoomDate=()=>{ if(R.cur&&R.cur.dateAt) openViewer(pvUrl,2.5,R.cur.dateAt); else { toast('Position de la date inconnue : ticket en plein écran'); openViewer(pvUrl,1); } };
+  $('#zoomDate').onclick=zoomDate; $('#pvDateBox').onclick=zoomDate;
   $('#rotR').onclick=async()=>{ if(!R.cur) return; Bar.show('Rotation…',null,true);
     try{ await saveCurrent(); const img=await bytesToImage(new Uint8Array(R.cur.jpeg)); const c=mk(img.naturalWidth,img.naturalHeight); c.getContext('2d').drawImage(img,0,0);
-      const r=rotateCanvas(c,1); R.cur.jpeg=(await canvasToBytes(r,LIGHT.q)).buffer; R.cur.thumb=makeThumb(r); await DB.put(R.cur); await setPreviews(R.cur); }
+      const r=rotateCanvas(c,1); R.cur.jpeg=(await canvasToBytes(r,LIGHT.q)).buffer; R.cur.thumb=makeThumb(r); R.cur.dateAt=null; await DB.put(R.cur); await setPreviews(R.cur); }
     finally{ Bar.hide(); } };
   $('#fDate').addEventListener('input',()=>{ $('#srcDate').textContent=''; $('#fDate').classList.remove('warnField'); updateName(); });
   $('#fProj').addEventListener('input',()=>{ $('#srcProj').textContent=''; $('#fProj').classList.remove('warnField'); if(R.cur) R.cur.projetTouched=true; renderProjects(); updateName(); });
