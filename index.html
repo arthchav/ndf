@@ -248,7 +248,7 @@ p.center{margin:-6px 0 0}
       <textarea id="sColl" rows="9" autocapitalize="off" autocorrect="off"></textarea>
     </label>
     <div class="field"><span>Plage des n° de projet (recherche automatique)</span>
-      <div class="row2"><input id="sMin" inputmode="numeric" placeholder="40030"><input id="sMax" inputmode="numeric" placeholder="41000"></div>
+      <div class="row2"><input id="sMin" inputmode="numeric" placeholder="40030"><input id="sMax" inputmode="numeric" placeholder="40100"></div>
     </div>
     <label class="field"><span>Mes projets en cours (appris automatiquement)</span>
       <textarea id="sProj" rows="2" autocapitalize="off" autocorrect="off" inputmode="numeric" placeholder="vide au départ"></textarea>
@@ -818,15 +818,16 @@ const fmtSize=n=>n>1048576?(n/1048576).toFixed(1).replace('.',',')+' Mo':Math.ro
 
 /* ---------- Réglages ---------- */
 const settings=(()=>{
-  const def={v:4,email:'',colleagues:DEFAULT_COLLEAGUES,projects:[],range:[40030,41000],compress:'leger',banner:true,gray:true,recentProjects:[],tipClosed:false};
+  const def={v:4,email:'',colleagues:DEFAULT_COLLEAGUES,projects:[],range:[40030,40100],compress:'leger',banner:true,gray:true,recentProjects:[],tipClosed:false};
   let s; try{ s=Object.assign(def,JSON.parse(localStorage.getItem('ndf_settings')||'{}')); }catch(e){ s=def; }
   if(!(s.v>=3)){ // migration -> v3 : Arthur en tête de liste, plus de « moi » imposé, liste de projets
     s.colleagues=[['Arthur','AC'],...s.colleagues.filter(c=>c[1]!=='AC')];
     if(s.v===undefined) s.gray=true; delete s.me; s.v=3;
   }
   if(s.v<4){ // v4 : site vierge de projets (on ne garde que ceux réellement validés), plage de recherche
-    s.projects=[...new Set(s.recentProjects||[])]; s.range=s.range||[40030,41000]; s.compress=s.compress||'leger'; s.v=4;
+    s.projects=[...new Set(s.recentProjects||[])]; s.range=s.range||[40030,40100]; s.compress=s.compress||'leger'; s.v=4;
   }
+  if(s.range&&s.range[0]===40030&&s.range[1]===41000) s.range=[40030,40100]; // ancienne plage par défaut
   return s;
 })();
 function saveSettings(){ try{ localStorage.setItem('ndf_settings',JSON.stringify(settings)); }catch(e){} }
