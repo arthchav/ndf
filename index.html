@@ -260,6 +260,10 @@ p.center{margin:-6px 0 0}
       <input type="email" id="sEmail" placeholder="administration@meanwhile-france.com" autocapitalize="off" autocorrect="off">
       <small class="muted">Copiée automatiquement au moment de l'envoi : il suffit de la coller dans « À ». Elle reste sur ton téléphone.</small>
     </label>
+    <label class="field"><span>Message du mail</span>
+      <textarea id="sMsg" rows="4" autocorrect="on"></textarea>
+      <small class="muted">{periode} est remplacé automatiquement par les dates des tickets envoyés, par exemple « du 10 juillet 2026 au 22 septembre 2026 », ou « du 10 juillet 2026 » s'il n'y a qu'une date. <button class="link" id="sMsgReset" type="button">Remettre le message par défaut</button></small>
+    </label>
     <label class="field"><span>Collègues — une ligne par personne : Prénom = INITIALES</span>
       <textarea id="sColl" rows="9" autocapitalize="off" autocorrect="off"></textarea>
     </label>
@@ -311,6 +315,7 @@ p.center{margin:-6px 0 0}
   <div class="sheet">
     <h2 id="mTitle"></h2>
     <ul id="mList"></ul>
+    <div class="card small" id="mMsg" style="white-space:pre-wrap"></div>
     <button class="big accent" id="mShare">Envoyer par Mail / Partager</button>
     <p class="muted small" id="mHint"></p>
     <button class="big" id="mZip">Télécharger un ZIP</button>
@@ -841,6 +846,7 @@ const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.w
 const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const OPENCV_URLS=['https://docs.opencv.org/4.10.0/opencv.js','https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js'];
 const DEFAULT_EMAIL='administration@meanwhile-france.com';
+const DEFAULT_MSG='Coucou le pôle admin, voici mes facturettes {periode}.\n\nBonne journée, je vous aime';
 const DEFAULT_COLLEAGUES=[['Arthur','AC'],['Clément','CV'],['Dorian','DLB'],['Julien','JM'],['Laurent','LD'],['Sacha','SC'],['Simon','SLP'],['Xavier','XF']];
 const sortColl=l=>[...l].sort((a,b)=>a[0].localeCompare(b[0],'fr',{sensitivity:'base'})||a[1].localeCompare(b[1]));
 const TYPES=[['Restaurant','restaurant'],['Logement','logement'],['Transport','transport'],['Péage','peage'],['Autre','']];
@@ -856,7 +862,7 @@ const fmtSize=n=>n>1048576?(n/1048576).toFixed(1).replace('.',',')+' Mo':Math.ro
 
 /* ---------- Réglages ---------- */
 const settings=(()=>{
-  const def={v:4,email:DEFAULT_EMAIL,colleagues:DEFAULT_COLLEAGUES,projects:[],range:[40030,40100],compress:'leger',gray:true,recentProjects:[],tipClosed:false};
+  const def={v:4,email:DEFAULT_EMAIL,msg:DEFAULT_MSG,colleagues:DEFAULT_COLLEAGUES,projects:[],range:[40030,40100],compress:'leger',gray:true,recentProjects:[],tipClosed:false};
   let s; try{ s=Object.assign(def,JSON.parse(localStorage.getItem('ndf_settings')||'{}')); }catch(e){ s=def; }
   if(!(s.v>=3)){ // migration -> v3 : Arthur en tête de liste, plus de « moi » imposé, liste de projets
     s.colleagues=[['Arthur','AC'],...s.colleagues.filter(c=>c[1]!=='AC')];
@@ -866,6 +872,7 @@ const settings=(()=>{
     s.projects=[...new Set(s.recentProjects||[])]; s.range=s.range||[40030,40100]; s.compress=s.compress||'leger'; s.v=4;
   }
   if(!s.email) s.email=DEFAULT_EMAIL; // adresse par défaut
+  if(!s.msg) s.msg=DEFAULT_MSG;
   s.colleagues=sortColl(s.colleagues); // ordre alphabétique
   if(s.range&&s.range[0]===40030&&s.range[1]===41000) s.range=[40030,40100]; // ancienne plage par défaut
   return s;
@@ -1382,7 +1389,7 @@ async function prepareExport(){
       Bar.show(`Création des PDF ${i+1}/${list.length}`,i/list.length,true); await raf();
       const t=list[i]; let base=buildName(t);
       if(used[base]){ used[base]++; base+='_'+used[base]; } else used[base]=1;
-      files.push({id:t.id,name:base+'.pdf',data:await pdfForTicket(t)});
+      files.push({id:t.id,date:t.date,name:base+'.pdf',data:await pdfForTicket(t)});
     }
   }catch(e){ Bar.hide(); return toast('Erreur PDF : '+e.message,4000); }
   Bar.hide();
@@ -1390,15 +1397,25 @@ async function prepareExport(){
   const total=files.reduce((a,f)=>a+f.data.length,0);
   $('#mTitle').textContent=`${files.length} PDF prêt${files.length>1?'s':''} · ${fmtSize(total)}`;
   $('#mList').innerHTML=files.map(f=>`<li>${esc(f.name)} <span class="muted">(${fmtSize(f.data.length)})</span></li>`).join('');
+  $('#mMsg').textContent=mailMessage(files);
   $('#mHint').textContent=`Les ${files.length} PDF partent séparément (pas de ZIP). `+(settings.email?`Dans Mail, colle l'adresse (déjà copiée) dans « À ». Pour un mail 100 % prêt : Raccourci iOS (voir les réglages).`:`Renseigne l'adresse dans les réglages pour qu'elle soit copiée automatiquement.`);
   $('#modal').hidden=false;
 }
 function closeModal(){ $('#modal').hidden=true; }
+const longDate=iso=>{ const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}).replace(/^1 /,'1er '); };
+/* Message du mail : {periode} = « du <plus ancienne> au <plus récente> », ou « du <date> » si une seule date */
+function mailMessage(list){
+  const ds=[...new Set(list.map(f=>f.date).filter(Boolean))].sort();
+  const per=!ds.length?'':ds.length===1?`du ${longDate(ds[0])}`:`du ${longDate(ds[0])} au ${longDate(ds[ds.length-1])}`;
+  let m=(settings.msg||DEFAULT_MSG).replace(/\{periode\}/g,per);
+  if(list.length===1) m=m.replace(/\bmes facturettes\b/,'ma facturette');
+  return m.replace(/\s+\./g,'.');
+}
 function shareNow(){
   if(!prepared) return;
   const files=prepared.map(f=>f.file), ids=prepared.map(f=>f.id);
   if(!(navigator.canShare&&navigator.canShare({files}))){ toast('Partage de fichiers non supporté ici : utilise le ZIP',4000); return; }
-  const p=navigator.share({files,title:'Facturettes'});
+  const p=navigator.share({files,title:'Facturettes',text:mailMessage(prepared)});
   if(settings.email&&navigator.clipboard&&navigator.clipboard.writeText)
     navigator.clipboard.writeText(settings.email).then(()=>toast('Adresse copiée : colle-la dans « À »',4000)).catch(()=>{});
   p.then(()=>{ closeModal(); setTimeout(async()=>{ if(confirm('Envoi terminé ?\nRetirer ces tickets de la liste ?')){ for(const id of ids) await DB.del(id); renderList(); toast('Liste vidée'); } },500); })
@@ -1415,7 +1432,7 @@ function downloadZip(){
 
 /* ---------- Réglages ---------- */
 function openSettings(){
-  $('#sEmail').value=settings.email;
+  $('#sEmail').value=settings.email; $('#sMsg').value=settings.msg||DEFAULT_MSG;
   $('#sColl').value=settings.colleagues.map(([n,i])=>`${n} = ${i}`).join('\n');
   $('#sProj').value=settings.projects.join(', ');
   $('#sMin').value=settings.range[0]; $('#sMax').value=settings.range[1];
@@ -1423,7 +1440,7 @@ function openSettings(){
   show('settings');
 }
 function saveSettingsForm(){
-  settings.email=$('#sEmail').value.trim();
+  settings.email=$('#sEmail').value.trim(); settings.msg=$('#sMsg').value.trim()||DEFAULT_MSG;
   const list=[];
   $('#sColl').value.split('\n').forEach(l=>{ l=l.trim(); if(!l) return;
     const parts=l.split(/\s*[=:]\s*/), name=parts[0].trim(), ini=sanitize(parts.length>1?parts[1]:parts[0]).toUpperCase();
@@ -1478,6 +1495,7 @@ function wire(){
   $('#cropAuto').onclick=()=>autoDetect(true);
   $('#cropOk').onclick=cropOk;
   $('#btnSend').onclick=prepareExport;
+  $('#sMsgReset').onclick=()=>{ $('#sMsg').value=DEFAULT_MSG; };
   $('#mShare').onclick=shareNow; $('#mZip').onclick=downloadZip; $('#mCancel').onclick=closeModal;
   $('#modal').onclick=e=>{ if(e.target.id==='modal') closeModal(); };
   const standalone=window.navigator.standalone||matchMedia('(display-mode: standalone)').matches;
