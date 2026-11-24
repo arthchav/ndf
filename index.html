@@ -1377,7 +1377,7 @@ async function prepareExport(){
       Bar.show(`Création des PDF ${i+1}/${list.length}`,i/list.length,true); await raf();
       const t=list[i]; let base=buildName(t);
       if(used[base]){ used[base]++; base+='_'+used[base]; } else used[base]=1;
-      files.push({id:t.id,date:t.date,name:base+'.pdf',data:await pdfForTicket(t)});
+      files.push({id:t.id,date:t.date,me:t.me,name:base+'.pdf',data:await pdfForTicket(t)});
     }
   }catch(e){ Bar.hide(); return toast('Erreur PDF : '+e.message,4000); }
   Bar.hide();
@@ -1385,11 +1385,17 @@ async function prepareExport(){
   const total=files.reduce((a,f)=>a+f.data.length,0);
   $('#mTitle').textContent=`${files.length} PDF prêt${files.length>1?'s':''} · ${fmtSize(total)}`;
   $('#mList').innerHTML=files.map(f=>`<li>${esc(f.name)} <span class="muted">(${fmtSize(f.data.length)})</span></li>`).join('');
-  $('#mMsg').textContent=mailMessage(files);
+  $('#mMsg').textContent='Objet : '+mailSubject(files)+'\n\n'+mailMessage(files);
   $('#mHint').textContent=`Les ${files.length} PDF partent séparément (pas de ZIP). `+(settings.email?`Dans Mail, colle l'adresse (déjà copiée) dans « À ».`:`Renseigne l'adresse dans les réglages pour qu'elle soit copiée automatiquement.`);
   $('#modal').hidden=false;
 }
 function closeModal(){ $('#modal').hidden=true; }
+/* Objet du mail : « Facturettes de <prénom choisi dans Qui es-tu ?> » */
+function mailSubject(list){
+  const cnt={}; list.forEach(f=>{ if(f.me) cnt[f.me]=(cnt[f.me]||0)+1; });
+  const me=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0], c=me&&settings.colleagues.find(c=>c[1]===me);
+  return me?`Facturettes de ${c?c[0]:me}`:'Facturettes';
+}
 const longDate=iso=>{ const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}).replace(/^1 /,'1er '); };
 /* Message du mail : {periode} = « du <plus ancienne> au <plus récente> », ou « du <date> » si une seule date */
 function mailMessage(list){
@@ -1403,7 +1409,7 @@ function shareNow(){
   if(!prepared) return;
   const files=prepared.map(f=>f.file), ids=prepared.map(f=>f.id);
   if(!(navigator.canShare&&navigator.canShare({files}))){ toast('Partage de fichiers non supporté ici : utilise le ZIP',4000); return; }
-  const p=navigator.share({files,title:'Facturettes',text:mailMessage(prepared)});
+  const p=navigator.share({files,title:mailSubject(prepared),text:mailMessage(prepared)});
   if(settings.email&&navigator.clipboard&&navigator.clipboard.writeText)
     navigator.clipboard.writeText(settings.email).then(()=>toast('Adresse copiée : colle-la dans « À »',4000)).catch(()=>{});
   p.then(()=>{ closeModal(); setTimeout(async()=>{ if(confirm('Envoi terminé ?\nRetirer ces tickets de la liste ?')){ for(const id of ids) await DB.del(id); renderList(); toast('Liste vidée'); } },500); })
