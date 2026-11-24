@@ -44,7 +44,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .bottom.row .btn.grow{flex:1.8 1 0}
 .row2{display:flex;gap:8px}.row2 .btn{flex:1;box-shadow:var(--sh)}
 button:disabled{opacity:.4}
-.icon{background:transparent;font-size:22px;width:40px;height:40px;border-radius:10px;flex:0 0 auto}
+.icon{background:transparent;font-size:22px;width:40px;height:40px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center}
 .link{background:none;color:var(--mut);text-decoration:underline;padding:4px;font-size:14px}
 .field{display:flex;flex-direction:column;gap:7px}
 .field>span{font-size:12px;color:var(--navy);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
@@ -101,7 +101,7 @@ input.warnField{border:2px solid var(--warn);background:#FFF7EE}
 .pill{background:var(--red);border-radius:999px;padding:1px 9px;font-size:12px;color:#fff;margin-left:4px}
 .tip{background:var(--blueL);border:1px solid #cddaf3;color:var(--navy);border-radius:12px;padding:10px 12px;font-size:14px;display:flex;gap:8px;align-items:center}
 .tip.warnTip{background:#FFF3E3;border-color:#F5D3A8}
-.tip>button.x{background:none;color:var(--mut);font-size:18px;padding:0 4px;margin-left:auto}
+.tip>button.x{display:grid;place-items:center;background:none;color:var(--mut);font-size:18px;padding:0 4px;margin-left:auto}
 .tip>.btn{margin-left:auto}
 #cropWrap{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;background:#111827;overflow:hidden}
 #cropStage{position:relative}
@@ -121,7 +121,7 @@ input.warnField{border:2px solid var(--warn);background:#FFF7EE}
 #vScroll{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch}
 #vImg{display:block;background:#fff;margin:0 auto}
 .vbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 18px);display:flex;gap:6px;background:var(--navy);border-radius:16px;padding:6px;align-items:center;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.35)}
-.vbar button{width:52px;height:46px;border-radius:12px;background:var(--navy2);font-size:22px;font-weight:700;color:#fff}
+.vbar button{display:grid;place-items:center;width:52px;height:46px;border-radius:12px;background:var(--navy2);font-size:22px;font-weight:700;color:#fff}
 .vbar span{min-width:44px;text-align:center;font-weight:700}
 #bar{position:fixed;top:env(safe-area-inset-top);left:0;right:0;height:4px;z-index:70;opacity:0;transition:opacity .2s;pointer-events:none;background:rgba(255,255,255,.25);overflow:hidden}
 #bar.on{opacity:1}
@@ -149,15 +149,15 @@ p.center{margin:-6px 0 0}
 <!-- ===================== ACCUEIL ===================== -->
 <section id="home" class="screen active">
   <header class="top">
-    <div><h1>Notes de frais</h1><div class="sub">Tickets → PDF renommés → envoi</div></div>
-    <button class="icon" id="btnSettings" aria-label="Réglages">⚙︎</button>
+    <div><h1>Notes de frais</h1></div>
+    <button class="icon" id="btnSettings" aria-label="Réglages"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </header>
   <main class="content">
-    <div class="tip" id="installTip" hidden>📲 <span>Dans Safari : <b>Partager → « Sur l'écran d'accueil »</b> pour l'utiliser comme une app.</span><button class="x" id="tipClose" aria-label="Fermer">✕</button></div>
-    <button class="big primary huge" id="btnPdf">📄 Importer le PDF des tickets<small>Un seul PDF avec tous les tickets à la suite (ex. Adobe Scan)</small></button>
+    <div class="tip" id="installTip" hidden><span>Dans Safari, touche <b>Partager</b> puis <b>« Sur l'écran d'accueil »</b> pour l'utiliser comme une app.</span><button class="x" id="tipClose" aria-label="Fermer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <button class="big primary huge" id="btnPdf">Importer le PDF des tickets<small>Un seul PDF avec tous les tickets à la suite (ex. Adobe Scan)</small></button>
     <div class="row2">
-      <button class="btn" id="btnScan">📷 Scanner un ticket</button>
-      <button class="btn" id="btnImport">🖼 Importer une photo</button>
+      <button class="btn" id="btnScan">Scanner un ticket</button>
+      <button class="btn" id="btnImport">Importer une photo</button>
     </div>
     <div class="tip warnTip" id="draftBanner" hidden><span id="draftText"></span><button class="btn accent" id="btnResume">Reprendre</button></div>
     <div class="listHead"><h2>Tickets prêts à envoyer <span id="count" class="pill">0</span></h2></div>
@@ -165,41 +165,41 @@ p.center{margin:-6px 0 0}
     <p id="empty" class="muted center">Aucun ticket pour l'instant.</p>
   </main>
   <footer class="bottom">
-    <button class="big accent" id="btnSend" disabled>📤 Envoyer</button>
+    <button class="big accent" id="btnSend" disabled>Envoyer</button>
   </footer>
 </section>
 
 <!-- ===================== QUI ES-TU ===================== -->
 <section id="who" class="screen">
-  <header class="top slim"><button class="icon" id="whoBack" aria-label="Retour">‹</button><h1>Qui es-tu ?</h1><span></span></header>
+  <header class="top slim"><button class="icon" id="whoBack" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><h1>Qui es-tu ?</h1><span></span></header>
   <main class="content">
     <p class="muted">Ton nom sera placé <b>en premier</b> dans le nom de chaque fichier de ce lot.</p>
     <div class="whoGrid" id="whoGrid"></div>
-    <button class="btn" id="whoAddBtn">➕ Je ne suis pas dans la liste</button>
+    <button class="btn" id="whoAddBtn">Je ne suis pas dans la liste</button>
     <div class="card" id="whoAdd" hidden>
       <div class="field"><span>Prénom</span><input id="whoName" autocomplete="given-name" placeholder="ex : Camille"></div>
       <div class="field" style="margin-top:10px"><span>Initiales</span><input id="whoIni" autocapitalize="characters" autocorrect="off" maxlength="4" placeholder="ex : CJ"></div>
       <button class="big primary" id="whoAddOk" style="margin-top:12px">Ajouter et me choisir</button>
     </div>
   </main>
-  <footer class="bottom"><button class="big primary" id="whoOk" disabled>Continuer →</button></footer>
+  <footer class="bottom"><button class="big primary" id="whoOk" disabled>Continuer</button></footer>
 </section>
 
 <!-- ===================== REVUE D'UN TICKET ===================== -->
 <section id="review" class="screen">
   <header class="top slim">
-    <button class="icon" id="revBack" aria-label="Accueil">‹</button>
+    <button class="icon" id="revBack" aria-label="Accueil"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
     <h1 id="revTitle">Ticket</h1>
-    <button class="icon" id="revDel" aria-label="Supprimer ce ticket">🗑</button>
+    <button class="icon" id="revDel" aria-label="Supprimer ce ticket"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
   </header>
   <div class="progress"><div id="revProg"></div></div>
   <main class="content" id="revContent">
     <div class="preview" id="pvBox"><img id="pv" alt="Aperçu du ticket"></div>
     <div class="preview strip" id="pvTopBox"><img id="pvTop" alt="Haut du ticket"><span class="lbl">Haut du ticket</span></div>
     <div class="tools">
-      <button class="btn" id="zoomTop">🔍 Zoom haut</button>
-      <button class="btn" id="zoomAll">⤢ Plein écran</button>
-      <button class="btn" id="rotR">⟳ Pivoter</button>
+      <button class="btn" id="zoomTop">Zoom haut</button>
+      <button class="btn" id="zoomAll">Plein écran</button>
+      <button class="btn" id="rotR">Pivoter</button>
     </div>
     <label class="field"><span>Date du ticket</span>
       <input type="date" id="fDate"><small class="src" id="srcDate"></small>
@@ -222,15 +222,15 @@ p.center{margin:-6px 0 0}
     <div id="formErr" class="err"></div>
   </main>
   <footer class="bottom row">
-    <button class="btn" id="revPrev">‹ Précédent</button>
-    <button class="btn primary grow" id="revNext">Valider ✓</button>
+    <button class="btn" id="revPrev">Précédent</button>
+    <button class="btn primary grow" id="revNext">Valider</button>
   </footer>
 </section>
 
 <!-- ===================== CADRAGE (scan photo) ===================== -->
 <section id="crop" class="screen">
   <header class="top slim">
-    <button class="icon" id="cropBack" aria-label="Annuler">✕</button>
+    <button class="icon" id="cropBack" aria-label="Annuler"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     <h1>Cadrage</h1>
     <span id="detectState" class="muted"></span>
   </header>
@@ -240,17 +240,17 @@ p.center{margin:-6px 0 0}
   </div>
   <p class="hint">Fais glisser les 4 coins sur les bords du ticket</p>
   <footer class="bottom row">
-    <button class="btn" id="cropRetake">↺ Photo</button>
-    <button class="btn" id="cropFull">⛶ Tout</button>
-    <button class="btn" id="cropAuto">✨ Auto</button>
-    <button class="btn primary grow" id="cropOk">Valider ✓</button>
+    <button class="btn" id="cropRetake">Reprendre</button>
+    <button class="btn" id="cropFull">Tout</button>
+    <button class="btn" id="cropAuto">Auto</button>
+    <button class="btn primary grow" id="cropOk">Valider</button>
   </footer>
 </section>
 
 <!-- ===================== RÉGLAGES ===================== -->
 <section id="settings" class="screen">
   <header class="top slim">
-    <button class="icon" id="setBack" aria-label="Retour">‹</button>
+    <button class="icon" id="setBack" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
     <h1>Réglages</h1><span></span>
   </header>
   <main class="content">
@@ -272,20 +272,20 @@ p.center{margin:-6px 0 0}
       <div class="seg" id="sComp"><button data-c="standard">Standard<br><small>~100 Ko</small></button><button data-c="leger">Léger<br><small>~70 Ko</small></button><button data-c="ultra">Ultra-léger<br><small>~20 Ko, N&amp;B pur</small></button></div>
     </div>
     <details class="card">
-      <summary>⚡ Mail 100 % prêt avec un Raccourci iOS</summary>
+      <summary>Mail 100 % prêt avec un Raccourci iOS</summary>
       <p>Une page web ne peut pas pré-remplir le destinataire d'un mail avec pièces jointes. Un Raccourci le fait :</p>
       <ol>
-        <li>App <b>Raccourcis</b> → <b>+</b> → nomme-le « Notes de frais ».</li>
+        <li>Ouvre l'app <b>Raccourcis</b>, touche <b>+</b> et nomme le raccourci « Notes de frais ».</li>
         <li>Ajoute l'action <b>Envoyer un e-mail</b>.</li>
         <li>Destinataire : ton adresse compta. Objet : « Notes de frais ». Dans le message, insère la variable <b>Entrée du raccourci</b> (= les PDF).</li>
-        <li>Réglages du raccourci (ⓘ) : active <b>Afficher dans la feuille de partage</b>, type accepté : <b>Fichiers</b>.</li>
+        <li>Réglages du raccourci (bouton i) : active <b>Afficher dans la feuille de partage</b>, type accepté : <b>Fichiers</b>.</li>
         <li>Option : désactive « Afficher la fiche de composition » pour un envoi direct.</li>
       </ol>
-      <p>Ensuite : Envoyer → Partager → « Notes de frais ». (Les intitulés peuvent varier un peu selon la version d'iOS.)</p>
+      <p>Ensuite : Envoyer, Partager, puis « Notes de frais ». (Les intitulés peuvent varier un peu selon la version d'iOS.)</p>
     </details>
     <details class="card">
-      <summary>📲 Installer sur l'écran d'accueil</summary>
-      <p>Dans Safari : Partager → « Sur l'écran d'accueil ». Envoie tes tickets régulièrement : iOS peut effacer les données d'un site non utilisé pendant plusieurs semaines.</p>
+      <summary>Installer sur l'écran d'accueil</summary>
+      <p>Dans Safari : Partager, puis « Sur l'écran d'accueil ». Envoie tes tickets régulièrement : iOS peut effacer les données d'un site non utilisé pendant plusieurs semaines.</p>
     </details>
     <button class="big danger" id="sClear">Supprimer tous les tickets</button>
     <p class="muted small center">Notes de frais v5.0<br>Tout est traité sur le téléphone.<br>Lecture : réseau de neurones maison (chiffres manuscrits) · Tesseract.js · PDF.js · OpenCV.js</p>
@@ -298,9 +298,9 @@ p.center{margin:-6px 0 0}
   <div class="sheet">
     <h2 id="mTitle"></h2>
     <ul id="mList"></ul>
-    <button class="big accent" id="mShare">✉️ Envoyer par Mail / Partager</button>
+    <button class="big accent" id="mShare">Envoyer par Mail / Partager</button>
     <p class="muted small" id="mHint"></p>
-    <button class="big" id="mZip">🗜 Télécharger un ZIP</button>
+    <button class="big" id="mZip">Télécharger un ZIP</button>
     <button class="link" id="mCancel">Fermer</button>
   </div>
 </div>
@@ -308,7 +308,7 @@ p.center{margin:-6px 0 0}
 <!-- ===================== VISIONNEUSE ===================== -->
 <div id="viewer" hidden>
   <div id="vScroll"><img id="vImg" alt="Ticket agrandi"></div>
-  <div class="vbar"><button id="vOut" aria-label="Dézoomer">−</button><span id="vZ">1×</span><button id="vIn" aria-label="Zoomer">+</button><button id="vClose" aria-label="Fermer">✕</button></div>
+  <div class="vbar"><button id="vOut" aria-label="Dézoomer">−</button><span id="vZ">1×</span><button id="vIn" aria-label="Zoomer">+</button><button id="vClose" aria-label="Fermer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
 </div>
 
 <input type="file" id="inPdf" accept="application/pdf,image/*" multiple hidden>
@@ -822,7 +822,7 @@ const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.w
 const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const OPENCV_URLS=['https://docs.opencv.org/4.10.0/opencv.js','https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js'];
 const DEFAULT_COLLEAGUES=[['Arthur','AC'],['Julien','JM'],['Laurent','LD'],['Sacha','SC'],['Dorian','DLB'],['Simon','SLP'],['Xavier','XF'],['Clément','CV']];
-const TYPES=[['🍽 Restaurant','restaurant'],['🛏 Logement','logement'],['🚆 Transport','transport'],['✏️ Autre','']];
+const TYPES=[['Restaurant','restaurant'],['Logement','logement'],['Transport','transport'],['Autre','']];
 const LIGHT={long:1700,short:1250,q:0.6};
 
 const $=s=>document.querySelector(s);
@@ -1078,9 +1078,9 @@ async function setPreviews(t){
   }catch(e){}
 }
 function setSrc(el,kind,what){
-  const m={ocr:['ok','✓ Lu avec confiance'],
-    guess:['warn',what==='date'?'⚠️ Date incertaine — vérifie-la bien sur le ticket':'⚠️ Lecture incertaine — vérifie bien'],
-    prev:['warn','↺ Repris du ticket précédent — vérifie'],none:['warn',`⚠️ ${what==='date'?'Date non trouvée':what==='projet'?'Projet non trouvé':'Rien trouvé'} — à saisir`]}[kind];
+  const m={ocr:['ok','Lu avec confiance'],
+    guess:['warn',what==='date'?'Date incertaine — vérifie-la bien sur le ticket':'Lecture incertaine — vérifie bien'],
+    prev:['warn','Repris du ticket précédent — vérifie'],none:['warn',`${what==='date'?'Date non trouvée':what==='projet'?'Projet non trouvé':'Rien trouvé'} — à saisir`]}[kind];
   el.className='src'+(m?' '+m[0]:''); el.textContent=m?m[1]:'';
 }
 async function openReview(i){
@@ -1090,7 +1090,7 @@ async function openReview(i){
   $('#revTitle').textContent=R.ids.length>1?`Ticket ${i+1} / ${R.ids.length}`:(t.status==='done'?'Modifier le ticket':'Ticket');
   $('#revProg').style.width=Math.round((i+1)/R.ids.length*100)+'%';
   $('#revPrev').disabled=i===0;
-  $('#revNext').textContent=i<R.ids.length-1?'Valider → suivant':'Valider et terminer ✓';
+  $('#revNext').textContent=i<R.ids.length-1?'Valider et suivant':'Valider et terminer';
   $('#fDate').value=t.date||''; $('#fProj').value=t.projet||''; $('#fType').value=t.type||'';
   const inis=settings.colleagues.map(c=>c[1]), ppl=(t.people||[]).filter(p=>p!==t.me);
   R.people=ppl.filter(p=>inis.includes(p)); $('#fExtra').value=ppl.filter(p=>!inis.includes(p)).join(' ');
@@ -1122,7 +1122,7 @@ function renderPeople(){
   const box=$('#peopleChips'); box.innerHTML='';
   const me=R.cur&&R.cur.me, off=me?2:1;
   if(me){ const c=settings.colleagues.find(c=>c[1]===me), b=document.createElement('button'); b.type='button'; b.className='chip me';
-    b.innerHTML=`👤 ${esc(c?c[0]:me)}<b>${esc(me)}</b><i>1</i>`; b.title='Changer';
+    b.innerHTML=`${esc(c?c[0]:me)}<b>${esc(me)}</b><i>1</i>`; b.title='Changer';
     b.onclick=async()=>{ await saveCurrent(); showWho(async m=>{ await applyMe(R.ids,m); openReview(R.i); },me); };
     box.appendChild(b); }
   settings.colleagues.forEach(([name,ini])=>{ if(ini===me) return;
@@ -1164,8 +1164,8 @@ async function nextOrFinish(){
   R.cur=null; await renderList(); show('home');
   const all=await DB.all();
   if(all.some(t=>t.status==='draft')) toast('Il reste des tickets à vérifier');
-  else if(R.ids.length>1){ toast('✓ Tous les tickets sont prêts'); prepareExport(); }
-  else toast('✓ Ticket enregistré');
+  else if(R.ids.length>1){ toast('Tous les tickets sont prêts'); prepareExport(); }
+  else toast('Ticket enregistré');
 }
 
 /* ---------- Visionneuse zoomable ---------- */
@@ -1272,13 +1272,13 @@ function bestQuad(cv,bin,area,allowRect){
   return null;
 }
 async function autoDetect(manual){
-  const tok=++S.detectTok; setDetect('⏳ détection…'); let mod;
+  const tok=++S.detectTok; setDetect('détection…'); let mod;
   try{ if(!(window.cv&&window.cv.Mat)) Bar.show('Chargement du moteur de scan (1re fois ≈ 10 Mo)…'); mod=await loadCV(); }
   catch(e){ if(tok===S.detectTok){ Bar.hide(); setDetect('auto indisponible'); if(manual) toast('Moteur de détection non chargé : cadre à la main'); } return; }
   if(tok!==S.detectTok) return; Bar.hide(); await raf();
   let q=null; try{ q=detectQuad(mod.cv,S.src); }catch(e){ console.warn(e); }
   if(tok!==S.detectTok) return;
-  if(q&&(manual||!S.touched)){ S.corners=q; drawOverlay(); setDetect('✓ bords détectés'); }
+  if(q&&(manual||!S.touched)){ S.corners=q; drawOverlay(); setDetect('bords détectés'); }
   else if(!q){ setDetect('bords non trouvés'); if(manual) toast('Bords non trouvés : place les coins à la main'); }
   else setDetect('');
 }
@@ -1309,12 +1309,12 @@ async function cropOk(){
 async function renderList(){
   const all=await DB.all(), done=all.filter(t=>t.status==='done'), drafts=all.filter(t=>t.status==='draft'), n=done.length;
   $('#count').textContent=n; $('#empty').hidden=!!n;
-  const sb=$('#btnSend'); sb.disabled=!n; sb.textContent=n?`📤 Envoyer ${n} ticket${n>1?'s':''}`:'📤 Envoyer';
+  const sb=$('#btnSend'); sb.disabled=!n; sb.textContent=n?`Envoyer ${n} ticket${n>1?'s':''}`:'Envoyer';
   $('#draftBanner').hidden=!drafts.length;
   $('#draftText').textContent=`${drafts.length} ticket${drafts.length>1?'s':''} à vérifier`;
   const box=$('#list'); box.innerHTML='';
   done.forEach(t=>{ const el=document.createElement('div'); el.className='item';
-    el.innerHTML=`<img src="${t.thumb}" alt=""><div class="meta"><code>${esc(buildName(t))}.pdf</code><small>${frDate(t.date)} · projet ${esc(t.projet)}</small></div><button class="icon" aria-label="Supprimer">🗑</button>`;
+    el.innerHTML=`<img src="${t.thumb}" alt=""><div class="meta"><code>${esc(buildName(t))}.pdf</code><small>${frDate(t.date)} · projet ${esc(t.projet)}</small></div><button class="icon" aria-label="Supprimer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>`;
     el.querySelector('button').onclick=async ev=>{ ev.stopPropagation(); if(confirm('Supprimer ce ticket ?')){ await DB.del(t.id); renderList(); } };
     el.onclick=()=>startReview([t.id]); box.appendChild(el); });
 }
@@ -1360,7 +1360,7 @@ async function prepareExport(){
   const total=files.reduce((a,f)=>a+f.data.length,0);
   $('#mTitle').textContent=`${files.length} PDF prêt${files.length>1?'s':''} · ${fmtSize(total)}`;
   $('#mList').innerHTML=files.map(f=>`<li>${esc(f.name)} <span class="muted">(${fmtSize(f.data.length)})</span></li>`).join('');
-  $('#mHint').textContent=`Les ${files.length} PDF partent séparément (pas de ZIP). `+(settings.email?`Dans Mail, colle l'adresse (déjà copiée) dans « À ». Pour un mail 100 % prêt : Raccourci iOS (voir ⚙︎).`:`Renseigne l'adresse dans ⚙︎ pour qu'elle soit copiée automatiquement.`);
+  $('#mHint').textContent=`Les ${files.length} PDF partent séparément (pas de ZIP). `+(settings.email?`Dans Mail, colle l'adresse (déjà copiée) dans « À ». Pour un mail 100 % prêt : Raccourci iOS (voir les réglages).`:`Renseigne l'adresse dans les réglages pour qu'elle soit copiée automatiquement.`);
   $('#modal').hidden=false;
 }
 function closeModal(){ $('#modal').hidden=true; }
@@ -1370,7 +1370,7 @@ function shareNow(){
   if(!(navigator.canShare&&navigator.canShare({files}))){ toast('Partage de fichiers non supporté ici : utilise le ZIP',4000); return; }
   const p=navigator.share({files,title:'Notes de frais'});
   if(settings.email&&navigator.clipboard&&navigator.clipboard.writeText)
-    navigator.clipboard.writeText(settings.email).then(()=>toast('📋 Adresse copiée : colle-la dans « À »',4000)).catch(()=>{});
+    navigator.clipboard.writeText(settings.email).then(()=>toast('Adresse copiée : colle-la dans « À »',4000)).catch(()=>{});
   p.then(()=>{ closeModal(); setTimeout(async()=>{ if(confirm('Envoi terminé ?\nRetirer ces tickets de la liste ?')){ for(const id of ids) await DB.del(id); renderList(); toast('Liste vidée'); } },500); })
    .catch(e=>{ if(e&&e.name!=='AbortError') toast('Partage impossible : '+e.message,4000); });
 }
@@ -1380,7 +1380,7 @@ function downloadZip(){
   const url=URL.createObjectURL(new Blob([makeZip(prepared)],{type:'application/zip'}));
   const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),60000);
-  toast('ZIP enregistré dans Fichiers › Téléchargements',4000);
+  toast('ZIP enregistré dans Fichiers, dossier Téléchargements',4000);
 }
 
 /* ---------- Réglages ---------- */
@@ -1402,7 +1402,7 @@ function saveSettingsForm(){
   settings.projects=[...new Set($('#sProj').value.split(/[\s,;]+/).map(sanitize).filter(Boolean))];
   const lo=parseInt($('#sMin').value,10), hi=parseInt($('#sMax').value,10); if(lo>0&&hi>=lo&&hi-lo<=5000) settings.range=[lo,hi];
   const cb=document.querySelector('#sComp button.on'); if(cb) settings.compress=cb.dataset.c;
-  saveSettings(); toast('✓ Réglages enregistrés'); show('home');
+  saveSettings(); toast('Réglages enregistrés'); show('home');
 }
 
 /* ---------- Branchements ---------- */
