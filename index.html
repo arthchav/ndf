@@ -161,6 +161,7 @@ p.center{margin:-6px 0 0}
   <main class="content">
     <div class="tip" id="installTip" hidden><span>Dans ton navigateur, touche <b>Partager</b> puis <b>« Sur l'écran d'accueil »</b> pour l'utiliser comme une app.</span><button class="x" id="tipClose" aria-label="Fermer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
     <button class="big primary huge" id="btnPdf">Importer le PDF des tickets<small>Un seul PDF avec tous les tickets à la suite (ex. Adobe Scan)</small></button>
+    <div class="tip" id="adobeTip" hidden><span>Scan reçu d'Adobe Scan.</span><button class="btn primary" id="btnPaste">Importer le scan</button></div>
     <div class="row2">
       <button class="btn" id="btnScan">Scanner un ticket</button>
       <button class="btn" id="btnImport">Importer une photo</button>
@@ -277,6 +278,19 @@ p.center{margin:-6px 0 0}
     <div class="field"><span>Poids des PDF</span>
       <div class="seg" id="sComp"><button data-c="standard">Standard<br><small>~100 Ko</small></button><button data-c="leger">Léger<br><small>~70 Ko</small></button><button data-c="ultra">Ultra-léger<br><small>~20 Ko, N&amp;B pur</small></button></div>
     </div>
+    <details class="card">
+      <summary>Importer directement depuis Adobe Scan</summary>
+      <p>Une page web ne peut pas apparaître seule dans le menu Partager d'iOS. Un petit Raccourci le fait à sa place (à créer une fois, 2 minutes) :</p>
+      <ol>
+        <li>Ouvre l'app <b>Raccourcis</b>, touche <b>+</b>, nomme le raccourci « Facturettes ».</li>
+        <li>Touche le bouton <b>i</b> (réglages du raccourci) et active <b>Afficher dans la feuille de partage</b>. Types acceptés : <b>PDF</b> uniquement.</li>
+        <li>Ajoute l'action <b>Encoder en base64</b> (entrée : <b>Entrée du raccourci</b>), puis dans ses options règle <b>Retours à la ligne</b> sur <b>Aucun</b>.</li>
+        <li>Ajoute l'action <b>Copier dans le presse-papiers</b>.</li>
+        <li>Ajoute l'action <b>Ouvrir les URL</b> avec : <b>https://arthchav.github.io/ndf/?adobe=1</b></li>
+      </ol>
+      <p>Ensuite, dans Adobe Scan : Partager, Partager une copie (PDF), puis « Facturettes ». L'app s'ouvre : touche <b>Importer le scan</b> puis <b>Coller</b> si iOS le demande.</p>
+      <p>Les intitulés peuvent varier un peu selon la version d'iOS.</p>
+    </details>
     <details class="card">
       <summary>Installer sur l'écran d'accueil</summary>
       <p>Dans ton navigateur : Partager, puis « Sur l'écran d'accueil ». Envoie tes tickets régulièrement : iOS peut effacer les données d'un site non utilisé pendant plusieurs semaines.</p>
@@ -417,7 +431,7 @@ function findProjectHand(left,known,prevProj){
   return {projet:best.p,conf:(best.c<1.5&&(!second||second.c-best.c>=0.3))?'ok':'guess'};
 }
 /* Initiales : une "case" par séparateur, comparée aux initiales connues */
-const LETTER_LOOK={C:'L(E<GcÇ€',L:'C1I|',D:')0OB',B:'08&6',A:'4/\\F',V:'UY',X:'K',S:'5$',F:'EP',M:'N',P:'F'};
+const LETTER_LOOK={C:'L(E<GcÇ€',L:'C1I|',D:')0OB',B:'08&6',A:'4/\\F',V:'UY',X:'K',S:'5$',F:'EP',M:'NHnr',J:'3Il1)',P:'F'};
 function iniCost(chunk,ini){
   const a=[...deacc(chunk).toUpperCase().replace(/></g,'X').replace(/[\s.,'`]/g,'')];
   const sub=(c,d)=> c===d?0 : (LETTER_LOOK[d]&&LETTER_LOOK[d].includes(c))?0.35 : 1;
@@ -465,10 +479,10 @@ function findDateInfo(text,ref){
     d=+d; m=+m; if(!(m>=1&&m<=12&&d>=1&&d<=31&&y)) return;
     const dt=new Date(y,m-1,d); if(dt.getMonth()!==m-1||dt<far||dt>max) return;
     if(dt>=near) score+=2;
-    if(/(date|le|du)\W{0,4}$/.test(ctxt)) score+=1.5;
+    if(/(date|data|le|du)\W{0,4}$/.test(ctxt)) score+=1.5;
     cands.push({iso:`${y}-${pad(m)}-${pad(d)}`,score,pos,strong:!!strong});
   };
-  const D='(\\d\\s?\\d|\\d)', S='\\s*[\\/\\.\\-]+\\s*', Y='(2\\s?0\\s?\\d\\s?\\d|\\d{4}|\\d\\d(?!\\s?\\d)|2[\\w)]\\s?2\\s?[\\w)]{1,2}|20[a-z)]{2})';
+  const D='(\\d\\s?\\d|\\d)', S='\\s*[\\/\\.\\-]+\\s*', Y='(2\\s?0\\s?\\d\\s?\\d|\\d{4}|\\d\\d(?!\\s?\\d)|\\d\\d(?=\\s+\\d{1,2}\\s?[:h]\\s?\\d)|2[\\w)]\\s?2\\s?[\\w)]{1,2}|20[a-z)]{2})';
   let r;
   const re1=new RegExp('(?:^|[^\\d])'+D+S+D+S+Y,'g');
   while((r=re1.exec(t))){ const d=r[1].replace(/\s/g,''), m=r[2].replace(/\s/g,''), yr=r[3].replace(/\s/g,''), ok4=/^20\d\d$/.test(yr); add(d,m,yearOf(r[3],d,m),ok4?3:/^\d\d$/.test(yr)?2:1.5,r.index,t.slice(Math.max(0,r.index-12),r.index+1),(ok4||/^\d\d$/.test(yr))&&d.length>0&&!/\s/.test(r[1]+r[2])); re1.lastIndex=r.index+1; }
@@ -512,6 +526,11 @@ function analyzeTicket(texts,hw,prev,ctx){
   let projet=pr?pr.projet:''; src.projet=pr?pr.conf==='ok'?'ocr':'guess':'none';
   if(!projet&&prev&&prev.projet){ projet=prev.projet; src.projet='prev'; }
   let people=[]; for(const p of parts){ for(const i of findInitialsHand(p.right,ctx.colleagues)) if(!people.includes(i)) people.push(i); if(people.length) break; }
+  // initiales ajoutées sur les lignes courtes juste en dessous (ex. « MV » puis « AC »)
+  for(const t of texts){ const L=String(t.full||'').split('\n'), k=L.findIndex(l=>t.hand&&l.trim()===String(t.hand).trim());
+    for(let i=(k>=0?k+1:1);i<Math.min(L.length,(k>=0?k:0)+5);i++){ const l=L[i].trim(), core=l.replace(/[^A-Za-z]/g,'');
+      if(!core||core.length>5||l.length>8) { if(l.replace(/[^A-Za-z0-9]/g,'').length>6) break; continue; }
+      for(const x of findInitialsHand(l,ctx.colleagues)) if(!people.includes(x)) people.push(x); } }
   src.people=people.length?'ocr':'none';
   if(!people.length&&prev&&prev.people&&prev.people.length){ people=[...prev.people]; src.people='prev'; }
   let dateAt=null;
@@ -1019,7 +1038,20 @@ async function makeDraft(canvas,text,prev,order,label,ref){
   await DB.put(t); return t;
 }
 async function importFiles(e){
-  const files=[...(e.target.files||[])]; e.target.value=''; if(!files.length) return;
+  const files=[...(e.target.files||[])]; e.target.value=''; return importFileList(files);
+}
+/* Raccourci « Facturettes » : Adobe Scan -> Partager -> Facturettes -> PDF copié (base64) + ouverture de l'app */
+async function importFromClipboard(){
+  let txt='';
+  try{ txt=await navigator.clipboard.readText(); }catch(e){ toast("Impossible de lire le presse-papiers : autorise le collage",4000); return; }
+  const b64=String(txt||'').replace(/^data:[^,]*,/,'').replace(/\s+/g,'');
+  if(!/^JVBER/.test(b64)){ toast('Aucun PDF dans le presse-papiers : repartage depuis Adobe Scan',4500); return; }
+  let bin; try{ const raw=atob(b64); bin=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) bin[i]=raw.charCodeAt(i); }catch(e){ toast('PDF illisible',4000); return; }
+  $('#adobeTip').hidden=true; try{ history.replaceState(null,'',location.pathname); }catch(_){}
+  importFileList([new File([bin],'adobe-scan.pdf',{type:'application/pdf'})]);
+}
+async function importFileList(files){
+  if(!files.length) return;
   const ids=[]; let prev=null, k=0;
   try{
     Bar.show('Ouverture du fichier…',null,true);
@@ -1368,15 +1400,28 @@ async function pdfForTicket(t){
   if(mode!=='standard'){ const s=Math.min(1,1400/Math.max(c.width,c.height)); if(s<1){ const o=mk(Math.round(c.width*s),Math.round(c.height*s)); o.getContext('2d').drawImage(c,0,0,o.width,o.height); c=o; } }
   return makePdf(await canvasToBytes(c,mode==='standard'?0.65:0.5),name);
 }
+/* Noms uniques : un type présent plusieurs fois est numéroté (peage, peage2, peage3…).
+   Péage : numéroté sur tout l'envoi ; autres types : seulement si deux fichiers auraient le même nom. */
+function uniqueNames(list){
+  const n={}, out=[], taken=new Set();
+  for(const t of list){
+    let name=buildName(t);
+    if(t.type==='peage'){ n.peage=(n.peage||0)+1; if(n.peage>1) name=buildName(Object.assign({},t,{type:'peage'+n.peage})); }
+    let k=1, base=t.type;
+    while(taken.has(name)){ k++; name=buildName(Object.assign({},t,{type:base+k})); }
+    taken.add(name); out.push(name);
+  }
+  return out;
+}
 let prepared=null;
 async function prepareExport(){
   const list=(await DB.all()).filter(t=>t.status==='done'); if(!list.length) return toast('Aucun ticket prêt');
-  const used={}, files=[];
+  list.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.created-b.created);
+  const names=uniqueNames(list), files=[];
   try{
     for(let i=0;i<list.length;i++){
       Bar.show(`Création des PDF ${i+1}/${list.length}`,i/list.length,true); await raf();
-      const t=list[i]; let base=buildName(t);
-      if(used[base]){ used[base]++; base+='_'+used[base]; } else used[base]=1;
+      const t=list[i], base=names[i];
       files.push({id:t.id,date:t.date,me:t.me,name:base+'.pdf',data:await pdfForTicket(t)});
     }
   }catch(e){ Bar.hide(); return toast('Erreur PDF : '+e.message,4000); }
@@ -1449,6 +1494,7 @@ function saveSettingsForm(){
 
 /* ---------- Branchements ---------- */
 function wire(){
+  $('#btnPaste').onclick=importFromClipboard;
   $('#btnPdf').onclick=()=>$('#inPdf').click();
   $('#btnScan').onclick=()=>$('#inCam').click();
   $('#btnImport').onclick=()=>$('#inLib').click();
@@ -1502,6 +1548,7 @@ function wire(){
   try{ await DB.open(); }catch(e){ DB.useMemory(); toast('Stockage indisponible : les tickets ne seront pas conservés',5000); }
   try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){}
   renderList();
+  if(/[?&]adobe=1/.test(location.search)) $('#adobeTip').hidden=false;
 })();
 </script>
 </body>
