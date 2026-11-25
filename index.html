@@ -853,7 +853,8 @@ const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.w
 const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const OPENCV_URLS=['https://docs.opencv.org/4.10.0/opencv.js','https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js'];
 const DEFAULT_EMAIL='administration@meanwhile-france.com';
-const DEFAULT_MSG='Coucou le pôle admin, voici mes facturettes {periode}.\n\nBonne journée, je vous aime';
+const DEFAULT_MSG='Coucou le pôle admin, voici mes facturettes {periode}.\n\nBonne journée';
+const OLD_MSG='Coucou le pôle admin, voici mes facturettes {periode}.\n\nBonne journée, je vous aime';
 const DEFAULT_COLLEAGUES=[['Arthur','AC'],['Clément','CV'],['Dorian','DLB'],['Julien','JM'],['Laurent','LD'],['Sacha','SC'],['Simon','SLP'],['Xavier','XF']];
 const sortColl=l=>[...l].sort((a,b)=>a[0].localeCompare(b[0],'fr',{sensitivity:'base'})||a[1].localeCompare(b[1]));
 const TYPES=[['🍽️ Restaurant','restaurant'],['🛏️ Logement','logement'],['🛂 Péage','peage']];
@@ -879,7 +880,7 @@ const settings=(()=>{
     s.projects=[...new Set(s.recentProjects||[])]; s.range=s.range||[40030,40100]; s.compress=s.compress||'leger'; s.v=4;
   }
   if(!s.email) s.email=DEFAULT_EMAIL; // adresse par défaut
-  if(!s.msg) s.msg=DEFAULT_MSG;
+  if(!s.msg||s.msg===OLD_MSG) s.msg=DEFAULT_MSG;
   s.colleagues=sortColl(s.colleagues); // ordre alphabétique
   if(s.range&&s.range[0]===40030&&s.range[1]===41000) s.range=[40030,40100]; // ancienne plage par défaut
   return s;
